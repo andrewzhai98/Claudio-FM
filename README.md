@@ -54,6 +54,21 @@ cp .env.example .env
 
 Then configure the services you want to use, such as your LLM provider, TTS provider, and music provider settings.
 
+### Required Configuration
+
+Claudio uses DeepSeek for DJ planning and Volcengine Doubao Speech for the default DJ voice. Fill these values in `.env`:
+
+```bash
+DEEPSEEK_API_KEY=your_deepseek_api_key
+VOLCENGINE_TTS_API_KEY=your_volcengine_tts_api_key
+VOLCENGINE_TTS_RESOURCE_ID=volc.service_type.10029
+VOLCENGINE_TTS_VOICE_TYPE=en_female_nadia_tips_emo_v2_mars_bigtts
+```
+
+- Get a DeepSeek API key from [DeepSeek API Keys](https://platform.deepseek.com/api_keys).
+- Activate and get the Doubao Speech API key from [Volcengine Speech Settings](https://console.volcengine.com/speech/new/setting/activate?ResourceID=volc.service_type.10029&projectName=default).
+- Doubao Speech currently includes 20,000 free characters for the 1.0 voice model and 20,000 free characters for the 2.0 voice model.
+
 Start Claudio:
 
 ```bash
@@ -135,6 +150,21 @@ cp .env.example .env
 ```
 
 然后配置你要使用的 LLM、TTS 和音乐服务。
+
+### 必要配置
+
+Claudio 默认使用 DeepSeek 生成 DJ 节目内容，使用火山引擎豆包语音生成 DJ 声音。请在 `.env` 中填写：
+
+```bash
+DEEPSEEK_API_KEY=你的_DeepSeek_API_Key
+VOLCENGINE_TTS_API_KEY=你的_火山引擎_豆包语音_API_Key
+VOLCENGINE_TTS_RESOURCE_ID=volc.service_type.10029
+VOLCENGINE_TTS_VOICE_TYPE=en_female_nadia_tips_emo_v2_mars_bigtts
+```
+
+- DeepSeek API Key 获取地址：[DeepSeek API Keys](https://platform.deepseek.com/api_keys)。
+- 豆包语音 API Key 激活与获取地址：[火山引擎语音技术控制台](https://console.volcengine.com/speech/new/setting/activate?ResourceID=volc.service_type.10029&projectName=default)。
+- 豆包语音目前赠送 1.0 语音模型 20,000 字免费用量，以及 2.0 语音模型 20,000 字免费用量。
 
 启动 Claudio：
 

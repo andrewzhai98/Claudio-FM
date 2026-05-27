@@ -384,157 +384,197 @@ html, body {
 .fullscreen-toggle.is-fullscreen .icon-exit { display: block; }
 
 /* ══════════════════════════════════════════════════════════════════
-   SKIN: Glass  —  warm frosted-glass aesthetic
+   SKIN: Glass  —  Apple visionOS / spatial glassmorphism
    ══════════════════════════════════════════════════════════════════ */
 
-/* Stage & blobs */
+/* ── Stage: deep scene with rich colour pockets ── */
 [data-skin="glass"] .stage {
   background:
-    radial-gradient(ellipse at 20% 10%, rgba(255,232,170,.75) 0%, transparent 52%),
-    radial-gradient(ellipse at 80% 85%, rgba(220,192,150,.60) 0%, transparent 52%),
-    radial-gradient(ellipse at 58% 30%, rgba(255,244,210,.55) 0%, transparent 62%),
-    linear-gradient(148deg, rgb(242,228,195) 0%, rgb(226,207,170) 52%, rgb(205,183,145) 100%);
+    radial-gradient(ellipse at 15% 85%, rgba(180,100,40,.55) 0%, transparent 48%),
+    radial-gradient(ellipse at 85% 10%, rgba(80,120,200,.50) 0%, transparent 48%),
+    radial-gradient(ellipse at 75% 75%, rgba(140,60,160,.40) 0%, transparent 45%),
+    radial-gradient(ellipse at 30% 20%, rgba(220,160,60,.45) 0%, transparent 45%),
+    linear-gradient(148deg, rgb(22,18,30) 0%, rgb(30,22,20) 55%, rgb(18,16,26) 100%);
 }
 [data-skin="glass"] .fluid.blue {
-  background: radial-gradient(circle at 40% 40%, oklch(0.83 0.14 76) 0%, oklch(0.71 0.16 72) 40%, oklch(0.56 0.10 73 / 0) 72%);
-  filter: blur(142px) saturate(0.95);
-  opacity: 0.52;
+  background: radial-gradient(circle at 40% 40%, oklch(0.68 0.22 240) 0%, oklch(0.52 0.24 245) 40%, oklch(0.34 0.15 248 / 0) 72%);
+  filter: blur(130px) saturate(1.4);
+  opacity: 0.82;
+  mix-blend-mode: screen;
 }
 [data-skin="glass"] .fluid.violet {
-  background: radial-gradient(circle, oklch(0.81 0.11 32) 0%, oklch(0.69 0.13 27) 42%, oklch(0.55 0.08 22 / 0) 72%);
-  filter: blur(142px) saturate(0.95);
-  opacity: 0.46;
+  background: radial-gradient(circle, oklch(0.62 0.24 320) 0%, oklch(0.46 0.26 316) 42%, oklch(0.30 0.16 312 / 0) 72%);
+  filter: blur(130px) saturate(1.4);
+  opacity: 0.78;
+  mix-blend-mode: screen;
 }
 [data-skin="glass"] .fluid.accent {
-  background: radial-gradient(circle, oklch(0.89 0.09 91) 0%, oklch(0.79 0.11 86) 45%, oklch(0.65 0.06 89 / 0) 72%);
-  filter: blur(114px) saturate(0.95);
-  opacity: 0.42;
+  background: radial-gradient(circle, oklch(0.75 0.20 55) 0%, oklch(0.58 0.22 50) 45%, oklch(0.38 0.14 48 / 0) 72%);
+  filter: blur(110px) saturate(1.4);
+  opacity: 0.70;
+  mix-blend-mode: screen;
 }
 [data-skin="glass"] .bg-grain {
-  background-image: radial-gradient(at 50% 55%, rgba(255,242,205,0) 0%, rgba(215,190,140,.07) 80%, rgba(175,148,100,.14) 100%);
+  background-image: radial-gradient(at 50% 60%, rgba(0,0,0,0) 0%, rgba(0,0,0,.22) 80%, rgba(0,0,0,.45) 100%);
 }
-[data-skin="glass"] .bg-noise { opacity: .02; mix-blend-mode: multiply; }
+[data-skin="glass"] .bg-noise { opacity: .04; mix-blend-mode: overlay; }
 
-/* Card */
+/* ── Card: near-invisible glass frame ── */
 [data-skin="glass"] .card {
-  background: rgba(255, 251, 241, 0.12);
-  backdrop-filter: blur(52px) saturate(1.75) brightness(1.04);
-  -webkit-backdrop-filter: blur(52px) saturate(1.75) brightness(1.04);
+  background: rgba(255,255,255,0.04);
+  backdrop-filter: blur(60px) saturate(1.8) brightness(1.06);
+  -webkit-backdrop-filter: blur(60px) saturate(1.8) brightness(1.06);
+  border: 1px solid rgba(255,255,255,.18);
   box-shadow:
-    rgba(100,72,35,.22) 0px 40px 80px -20px,
-    rgba(100,72,35,.12) 0px 10px 24px -8px,
-    rgba(255,255,255,.62) 0px 0px 0px 1px inset,
-    rgba(255,255,255,.28) 0px 1px 0px inset;
+    rgba(0,0,0,.55) 0px 40px 90px -20px,
+    rgba(255,255,255,.12) 0px 1px 0px 0px inset,
+    rgba(255,255,255,.06) 0px 0px 0px 1px inset;
 }
 
-/* Header */
+/* ── Header: dark glass overlay ── */
 [data-skin="glass"] .header {
-  background: linear-gradient(rgba(38,26,14,.76) 0%, rgba(52,36,18,.68) 100%);
+  background: linear-gradient(rgba(8,6,14,.72) 0%, rgba(12,8,18,.60) 100%);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+[data-skin="glass"] .header::before {
+  background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
 }
 [data-skin="glass"] .header-avatar {
-  background: linear-gradient(135deg, oklch(0.82 0.13 76), oklch(0.72 0.15 38));
+  background: linear-gradient(135deg, oklch(0.68 0.22 240), oklch(0.62 0.24 320));
+  border-color: rgba(255,255,255,.22);
 }
-[data-skin="glass"] .header-status { color: rgb(255,215,100); }
+[data-skin="glass"] .header-status { color: rgba(255,255,255,.70); }
 [data-skin="glass"] .dot-live {
-  background: rgb(255,200,58);
-  box-shadow: rgba(255,200,58,.65) 0 0 6px;
+  background: rgb(255,255,255);
+  box-shadow: rgba(255,255,255,.8) 0 0 8px;
 }
+[data-skin="glass"] .header-time { color: rgba(255,255,255,.80); }
 
-/* Body */
-[data-skin="glass"] .body { background: rgba(255, 250, 238, 0.74); }
-[data-skin="glass"] .meta-name { color: rgb(30,22,12); }
-[data-skin="glass"] .session-title { color: rgba(100,80,50,.72); }
-[data-skin="glass"] .meta-sub { color: rgba(95,78,52,.8); }
-[data-skin="glass"] .meta-source { color: rgba(108,84,50,.65); }
-[data-skin="glass"] .meta-source:hover { color: rgba(55,38,16,.9); }
+/* ── Body: fully transparent — glass shows through ── */
+[data-skin="glass"] .body { background: transparent; }
 
-/* Transcript */
+/* ── Meta ── */
+[data-skin="glass"] .session-title { color: rgba(255,255,255,.42); }
+[data-skin="glass"] .meta-name { color: rgba(255,255,255,.96); }
+[data-skin="glass"] .meta-sub { color: rgba(255,255,255,.52); }
+[data-skin="glass"] .meta-source { color: rgba(255,255,255,.38); }
+[data-skin="glass"] .meta-source:hover { color: rgba(255,255,255,.72); }
+
+/* ── Transcript area ── */
 [data-skin="glass"] .transcript-wrap {
-  background:
-    radial-gradient(circle, rgba(0,0,0,.03) 0.5px, transparent 0.5px) 0 0 / 12px 12px,
-    rgba(255, 248, 228, 0.62);
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
 }
 [data-skin="glass"] .transcript-fade {
-  background: linear-gradient(rgba(255,248,228,0) 0%, rgba(255,248,228,.85) 100%);
+  background: linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,.12) 100%);
 }
-[data-skin="glass"] .turn-head { color: rgba(120,96,62,.72); }
-[data-skin="glass"] .turn-head .who { color: rgba(85,66,40,.82); }
-[data-skin="glass"] .turn.active .turn-head { color: rgb(30,22,12); }
-[data-skin="glass"] .turn.active .turn-head .who { color: rgb(30,22,12); }
-[data-skin="glass"] .turn-body { color: rgb(32,24,13); }
-[data-skin="glass"] .word.said { color: rgb(32,24,13); }
-[data-skin="glass"] .word.current {
-  color: rgb(75,48,8);
-  background: rgba(220,158,30,.22);
-  box-shadow: rgba(220,158,30,.28) 0 0 0 1px;
-}
-[data-skin="glass"] .word.future { color: rgba(110,86,55,.45); }
 
-/* Player bar */
-[data-skin="glass"] .player { background: rgba(255,248,228,.56); }
-[data-skin="glass"] .player-time { color: rgb(32,24,13); }
-[data-skin="glass"] .player-bar { background: rgba(160,130,85,.32); }
-[data-skin="glass"] .player-bar.played { background: rgb(105,72,28); }
-[data-skin="glass"] .play-btn {
-  background: rgba(70,48,18,.88);
+/* ── Each turn = individual glass card ── */
+[data-skin="glass"] .turn {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-[data-skin="glass"] .play-btn:hover { background: rgba(90,62,22,.92); }
+[data-skin="glass"] .turn.active {
+  background: rgba(255,255,255,.11);
+  border-color: rgba(255,255,255,.16);
+}
+[data-skin="glass"] .turn.pending { opacity: .28; }
+[data-skin="glass"] .turn-head { color: rgba(255,255,255,.38); }
+[data-skin="glass"] .turn-head .who { color: rgba(255,255,255,.52); }
+[data-skin="glass"] .turn.active .turn-head { color: rgba(255,255,255,.50); }
+[data-skin="glass"] .turn.active .turn-head .who { color: rgba(255,255,255,.75); }
+[data-skin="glass"] .turn-body { color: rgba(255,255,255,.88); }
+[data-skin="glass"] .word.said { color: rgba(255,255,255,.88); }
+[data-skin="glass"] .word.current {
+  color: rgb(255,255,255);
+  background: rgba(255,255,255,.18);
+  box-shadow: rgba(255,255,255,.22) 0 0 0 1px;
+}
+[data-skin="glass"] .word.future { color: rgba(255,255,255,.28); }
 
-/* Floating buttons */
+/* ── Player: dark glass bottom bar ── */
+[data-skin="glass"] .player {
+  background: rgba(0,0,0,.22);
+  border-top: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+[data-skin="glass"] .player-time { color: rgba(255,255,255,.72); }
+[data-skin="glass"] .player-bar { background: rgba(255,255,255,.18); }
+[data-skin="glass"] .player-bar.played { background: rgba(255,255,255,.88); }
+[data-skin="glass"] .play-btn {
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.22);
+  backdrop-filter: blur(12px);
+  color: rgba(255,255,255,.95);
+}
+[data-skin="glass"] .play-btn:hover {
+  background: rgba(255,255,255,.24);
+  transform: scale(1.04);
+}
+[data-skin="glass"] .play-btn:active { transform: scale(.96); }
+
+/* ── Floating buttons: dark glass pills ── */
 [data-skin="glass"] .tweaks-toggle,
 [data-skin="glass"] .chat-toggle,
 [data-skin="glass"] .fullscreen-toggle {
-  background: rgba(252,246,232,.74);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,.58);
-  color: rgba(48,36,18,.85);
-  box-shadow: rgba(100,72,35,.20) 0 8px 20px;
+  background: rgba(18,14,28,.65);
+  backdrop-filter: blur(24px) saturate(1.5);
+  border: 1px solid rgba(255,255,255,.14);
+  color: rgba(255,255,255,.80);
+  box-shadow: rgba(0,0,0,.45) 0 8px 24px, rgba(255,255,255,.06) 0 1px 0 inset;
 }
 [data-skin="glass"] .tweaks-toggle:hover,
 [data-skin="glass"] .chat-toggle:hover,
 [data-skin="glass"] .fullscreen-toggle:hover {
-  background: rgba(255,252,240,.88);
+  background: rgba(28,22,42,.75);
+  color: rgba(255,255,255,.95);
 }
-[data-skin="glass"] .chat-toggle svg { color: rgb(200,142,38); }
+[data-skin="glass"] .chat-toggle svg { color: rgba(255,255,255,.80); }
 
-/* Chat bar */
+/* ── Chat bar: dark glass ── */
 [data-skin="glass"] .chat-bar {
-  background: rgba(252,246,232,.80);
-  backdrop-filter: blur(24px) saturate(1.5);
-  border: 1px solid rgba(255,255,255,.58);
-  box-shadow: rgba(100,72,35,.18) 0 16px 36px, rgba(255,255,255,.62) 0 1px 0 inset;
+  background: rgba(18,14,28,.70);
+  backdrop-filter: blur(32px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,.14);
+  box-shadow: rgba(0,0,0,.50) 0 16px 40px, rgba(255,255,255,.06) 0 1px 0 inset;
 }
-[data-skin="glass"] #chat-input { color: rgba(35,26,12,.92); }
-[data-skin="glass"] #chat-input::placeholder { color: rgba(90,70,40,.50); }
+[data-skin="glass"] #chat-input { color: rgba(255,255,255,.90); }
+[data-skin="glass"] #chat-input::placeholder { color: rgba(255,255,255,.35); }
 [data-skin="glass"] #chat-send {
-  background: rgba(78,52,16,.88);
-  color: rgb(255,246,222);
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.90);
 }
-[data-skin="glass"] #chat-send:hover { background: rgba(98,66,20,.94); transform: scale(1.04); }
+[data-skin="glass"] #chat-send:hover { background: rgba(255,255,255,.22); transform: scale(1.04); }
 
-/* Tweaks panel */
+/* ── Tweaks panel: dark glass ── */
 [data-skin="glass"] .tweaks {
-  background: rgba(252,246,232,.90);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,.60);
-  color: rgb(35,26,12);
-  box-shadow: rgba(100,72,35,.22) 0 12px 32px;
+  background: rgba(18,14,28,.78);
+  backdrop-filter: blur(32px) saturate(1.6);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.88);
+  box-shadow: rgba(0,0,0,.55) 0 16px 40px, rgba(255,255,255,.06) 0 1px 0 inset;
 }
-[data-skin="glass"] .tweaks h3 { color: rgba(90,70,40,.68); }
-[data-skin="glass"] .tweak-row label { color: rgba(55,42,22,.78); }
-[data-skin="glass"] .tweak-row input[type="range"] { accent-color: rgb(110,72,22); }
+[data-skin="glass"] .tweaks h3 { color: rgba(255,255,255,.38); }
+[data-skin="glass"] .tweak-row label { color: rgba(255,255,255,.62); }
+[data-skin="glass"] .tweak-row input[type="range"] { accent-color: rgba(255,255,255,.80); }
 [data-skin="glass"] .segmented {
-  background: rgba(110,82,38,.10);
-  border: 1px solid rgba(110,82,38,.16);
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
 }
-[data-skin="glass"] .segmented button { color: rgba(80,60,28,.65); }
+[data-skin="glass"] .segmented button { color: rgba(255,255,255,.45); }
 [data-skin="glass"] .segmented button.active {
-  background: rgba(78,52,16,.88);
-  color: rgb(255,246,222);
+  background: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.95);
 }
 [data-skin="glass"] .swatch { border-color: transparent; }
-[data-skin="glass"] .swatch.active { border-color: rgba(78,52,16,.75); }
+[data-skin="glass"] .swatch.active { border-color: rgba(255,255,255,.70); }
 </style>
 </head>
 <body>
@@ -922,7 +962,7 @@ syncFullscreenButton();
       const y = H - bh;
 
       const alpha = playing ? 0.55 + 0.35 * normalized : 0.25 + 0.15 * normalized;
-      const wc = document.documentElement.dataset.skin === 'glass' ? '255,195,58' : '41,255,184';
+      const wc = document.documentElement.dataset.skin === 'glass' ? '255,255,255' : '41,255,184';
       ctx.fillStyle = `rgba(${wc},${alpha.toFixed(2)})`;
       ctx.beginPath();
       ctx.roundRect(x, y, barW, bh, [2, 2, 0, 0]);

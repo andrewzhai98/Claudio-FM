@@ -1250,7 +1250,8 @@ function switchTab(tab) {
   const panelQueue = document.getElementById('panelQueue');
   if (panelQueue) panelQueue.style.display = tab === 'queue' ? '' : 'none';
   // panelMemory
-  panelMemory.style.display = tab === 'memory' ? '' : 'none';
+  // panelMemory
+  if (panelMemory) panelMemory.style.display = tab === 'memory' ? '' : 'none';
   if (tab === 'queue') renderQueueUI();
   if (tab === 'memory') renderMemoryUI();
 }
@@ -1313,13 +1314,14 @@ function renderQueueUI() {
 let memoryItems = [];
 function renderMemoryUI() {
   if (currentTab !== 'memory') return;
-  const panel = panelMemory;
+  const panel = document.getElementById('panelMemory');
+  if (!panel) return;
   panel.innerHTML = '';
   if (!memoryItems.length) {
     panel.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0;">No memory yet.</div>';
     return;
   }
-  memoryItems.forEach((item, i) => {
+  memoryItems.forEach((item, idx) => {
     const div = document.createElement('div');
     div.className = 'memory-item';
     const timeStr = item.time || '';
@@ -1514,11 +1516,6 @@ musicAudio.addEventListener('pause', () => {
 });
 musicAudio.addEventListener('ended', () => {
   stopFreqViz();
-});
-
-musicAudio.addEventListener('play',  () => setPlaying(true));
-musicAudio.addEventListener('pause', () => setPlaying(false));
-musicAudio.addEventListener('ended', () => {
   console.info('[music] ended', {
     title: metaName.textContent,
     duration: musicAudio.duration,
@@ -2046,7 +2043,7 @@ function connectWS() {
   ws.onerror = () => ws.close();
   ws.onmessage = e => {
     let msg;
-    try { msg = JSON.parse(e.data); } catch { return; }
+    try { msg = JSON.parse(e.data); } catch (err) { return; }
     handleWsMessage(msg);
   };
 }

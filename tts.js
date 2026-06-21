@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const https = require('https');
+const { spawn, exec } = require('child_process');
 
 const CACHE_DIR = path.join(__dirname, 'cache/tts');
 fs.mkdirSync(CACHE_DIR, { recursive: true });
@@ -15,7 +16,8 @@ function md5(text) {
 function cachePath(text, provider = process.env.TTS_PROVIDER || 'volcengine', options = {}) {
   const voice = getVoiceForProvider(provider, options);
   const role = options.role || 'station';
-  return path.join(CACHE_DIR, `${md5(`${role}:${provider}:${voice}:${text}`)}.mp3`);
+  const ext = provider === 'mac' ? 'm4a' : 'mp3';
+  return path.join(CACHE_DIR, `${md5(`${role}:${provider}:${voice}:${text}`)}.${ext}`);
 }
 
 function synthesize(text, options = {}) {
@@ -35,6 +37,10 @@ function synthesize(text, options = {}) {
     promise = synthesizeVolcengine(text, cached, options);
   } else if (provider === 'fish') {
     promise = synthesizeFish(text, cached, options);
+  } else if (provider === 'mac') {
+    promise = synthesizeMac(text, cached, options);
+  } else if (provider === 'edge') {
+    promise = synthesizeEdge(text, cached, options);
   } else {
     promise = synthesizeKokoro(text, cached, options);
   }
@@ -121,22 +127,25 @@ function extractJsonObjects(text) {
 
 async function synthesizeVolcengine(text, outPath, options = {}) {
   const apiKey = options.apiKey || process.env.VOLCENGINE_TTS_API_KEY;
-  const resourceId = options.resourceId || process.env.VOLCENGINE_TTS_RESOURCE_ID;
 
-  if (!apiKey || !resourceId) {
-    throw new Error('VOLCENGINE_TTS_API_KEY or VOLCENGINE_TTS_RESOURCE_ID not set');
+  if (!apiKey) {
+    throw new Error('VOLCENGINE_TTS_API_KEY not set');
   }
 
+  const resourceId = options.resourceId || process.env.VOLCENGINE_TTS_RESOURCE_ID;
   const endpoint = options.endpoint || process.env.VOLCENGINE_TTS_ENDPOINT || VOLCENGINE_DEFAULT_ENDPOINT;
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Api-Key': apiKey,
+    'X-Api-Request-Id': crypto.randomUUID(),
+    'Connection': 'keep-alive',
+  };
+  if (resourceId) {
+    headers['X-Api-Resource-Id'] = resourceId;
+  }
   const res = await fetch(endpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
-      'X-Api-Resource-Id': resourceId,
-      'X-Api-Request-Id': crypto.randomUUID(),
-      'Connection': 'keep-alive',
-    },
+    headers,
     body: JSON.stringify(buildVolcenginePayload(text, options)),
   });
 
@@ -258,3 +267,55 @@ async function synthesizeKokoro(text, outPath, options = {}) {
 }
 
 module.exports = { synthesize, cachePath };
+
+function getEdgeVoice(role, options = {}) {
+  if (role === 'caller' || options.role === 'caller') {
+    return options.voice || process.env.EDGE_CALLER_VOICE || 'zh-CN-YunxiNeural';
+  }
+  return options.voice || process.env.EDGE_DJ_VOICE || 'en-US-AndrewMultilingualNeural';
+}
+
+async function synthesizeEdge(text, outPath, options = {}) {
+  const voice = getEdgeVoice(options.role, options);
+  return new Promise((resolve, reject) => {
+    const proc = spawn('python3', [
+      '-m', 'edge_tts',
+      '--text', text,
+      '--voice', voice,
+      '--write-media', outPath,
+    ]);
+    let stderr = '';
+    proc.stderr?.on('data', d => { stderr += d.toString(); });
+    proc.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`edge-tts exited with code ${code}: ${stderr}`));
+      resolve(outPath);
+    });
+    proc.on('error', reject);
+  });
+}
+
+function getMacVoice(role, options = {}) {
+  if (role === 'caller' || options.role === 'caller') {
+    return options.voiceType || process.env.MAC_CALLER_VOICE || 'Ting-Ting';
+  }
+  return options.voiceType || process.env.MAC_DJ_VOICE || 'Samantha';
+}
+
+async function synthesizeMac(text, outPath, options = {}) {
+  const voice = getMacVoice(options.role, options);
+  const tmpAiff = outPath + '.aiff';
+
+  return new Promise((resolve, reject) => {
+    const proc = spawn('/usr/bin/say', ['-v', voice, '-o', tmpAiff, text]);
+    proc.on('close', (code) => {
+      if (code !== 0) return reject(new Error(`mac say exited with code ${code}`));
+      // Use afconvert (built into macOS) to convert aiff to m4a (AAC)
+      exec(`afconvert -f m4af -d aac "${tmpAiff}" "${outPath}"`, (err) => {
+        try { fs.unlinkSync(tmpAiff); } catch (e) {}
+        if (err) return reject(new Error('afconvert failed: ' + err.message));
+        resolve(outPath);
+      });
+    });
+    proc.on('error', reject);
+  });
+}

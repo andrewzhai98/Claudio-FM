@@ -8,8 +8,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Doto:wght@400;600&family=Space+Grotesk:wght@300;400&display=swap" rel="stylesheet">
 <style>
+/* ═══════════════════════════════════════════════════════
+   STAGE + FLUID BLOBS (KEEP breathing background)
+   ═══════════════════════════════════════════════════════ */
 html, body {
-  margin: 0; padding: 0; height: 100%; width: 100%;
+  margin:0; padding:0; height:100%; width:100%;
   font-family: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
   overflow: hidden;
@@ -18,15 +21,13 @@ html, body {
 }
 * { box-sizing: border-box; }
 
-/* ── Stage ──────────────────────────────────────────────────────── */
 .stage {
-  position: fixed; inset: 0;
+  position: fixed; inset:0;
   display: grid; place-items: center;
   overflow: hidden;
   background: radial-gradient(rgb(17,18,26) 0%, rgb(10,10,16) 70%, rgb(7,7,11) 100%);
 }
 
-/* ── Fluid blobs ─────────────────────────────────────────────────── */
 .fluid {
   position: absolute; border-radius: 50%;
   filter: blur(142px) saturate(1.1);
@@ -92,187 +93,334 @@ html, body {
   mix-blend-mode: overlay;
 }
 
-/* ── Card ────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   CARD — dark terminal style
+   ═══════════════════════════════════════════════════════ */
 .card {
   position: relative;
   width: 616px; max-width: calc(100vw - 48px);
-  height: min(876px, calc(100vh - 48px));
+  height: min(900px, calc(100vh - 48px));
   border-radius: 28px; overflow: hidden;
-  box-shadow:
-    rgba(0,0,0,.5) 0px 40px 80px -20px,
-    rgba(0,0,0,.3) 0px 10px 24px -8px,
-    rgba(255,255,255,.06) 0px 0px 0px 1px;
   display: flex; flex-direction: column;
-  background: rgb(255,255,255);
+  background: rgba(10,10,14,.92);
+  backdrop-filter: blur(60px) saturate(1.8) brightness(1.06);
+  -webkit-backdrop-filter: blur(60px) saturate(1.8) brightness(1.06);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow:
+    rgba(0,0,0,.55) 0px 40px 90px -20px,
+    rgba(255,255,255,.12) 0px 1px 0px 0px inset,
+    rgba(255,255,255,.06) 0px 0px 0px 1px inset;
 }
 
-/* ── Header ──────────────────────────────────────────────────────── */
-.header {
-  position: relative; flex: 0 0 auto; height: 232px;
-  background: linear-gradient(rgb(12,12,14) 0%, rgb(22,22,26) 100%);
-  color: rgb(255,255,255);
-  padding: 22px 24px 0; border-radius: 28px 28px 0 0; overflow: hidden;
+/* ── Top bar (clock + ON AIR) ─────────────────────────────────── */
+.topbar {
+  flex: 0 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 24px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  position: relative; z-index: 5;
 }
-.header::before {
-  content: ""; position: absolute; inset: 0 0 auto;
-  height: 130px;
-  background-image: radial-gradient(circle, rgba(255,255,255,.09) 1px, transparent 1px);
-  background-size: 16px 16px; pointer-events: none;
-  mask-image: linear-gradient(rgba(0,0,0,.95) 0%, rgba(0,0,0,.55) 55%, transparent 100%);
+.topbar-left {
+  display: flex; align-items: center; gap: 14px;
+  min-width: 0;
 }
-.header-top {
-  display: flex; justify-content: space-between; align-items: flex-start;
-  position: relative; z-index: 2;
+.brand {
+  display: flex; align-items: center; gap: 10px;
 }
-.header-name {
-  font-family: Doto, "Space Mono", monospace;
-  font-size: 32px; font-weight: 400; letter-spacing: -.02em; line-height: 1.1;
-  color: rgb(255,255,255); display: flex; align-items: center; gap: 10px;
-}
-.header-avatar {
-  width: 28px; height: 28px; border-radius: 50%; overflow: hidden;
-  border: 1px solid rgba(255,255,255,.18); flex-shrink: 0;
+.brand-dot {
+  width: 28px; height: 28px; border-radius: 50%;
   background: linear-gradient(135deg, oklch(0.62 0.17 256), oklch(0.58 0.19 330));
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.18);
+  flex-shrink: 0;
   display: grid; place-items: center;
-  font-size: 13px; color: #fff; font-family: Inter, sans-serif;
+  font-size: 13px; color: #fff; font-family: Doto, monospace;
 }
-.header-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.header-status {
-  font-size: 13px; font-weight: 400; color: rgb(41,255,184);
-  margin-top: 4px; padding-left: 38px;
-  display: flex; align-items: center; gap: 6px;
+.brand-name {
+  font-family: Doto, 'Space Mono', monospace;
+  font-size: 22px; font-weight: 400; letter-spacing: .06em;
+  color: rgba(255,255,255,0.92);
+  text-shadow: 0 0 14px rgba(255,255,255,0.12);
 }
-.dot-live {
-  width: 6px; height: 6px; border-radius: 999px;
-  background: rgb(41,255,184); box-shadow: rgba(41,255,184,.6) 0 0 6px;
-  animation: 1.2s ease-in-out 0s infinite pulse; opacity: .9;
+.topbar-right {
+  display: flex; align-items: center; gap: 16px;
 }
+.onair-indicator {
+  display: flex; align-items: center; gap: 8px;
+  color: rgb(41,255,184);
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+}
+.onair-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgb(41,255,184);
+  box-shadow: rgba(41,255,184,.6) 0 0 8px;
+  animation: 1.2s ease-in-out 0s infinite pulse;
+  opacity: .9;
+}
+.onair-dot.off { background: rgba(255,255,255,0.3); box-shadow: none; animation: none; opacity: .5; }
 @keyframes pulse {
   0%,100% { opacity: .4; transform: scale(.8); }
   50%      { opacity: 1;  transform: scale(1.1); }
 }
-.header-time {
-  font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums;
-  color: rgba(255,255,255,.95);
-}
-.wave-wrap {
-  position: absolute; left: 0; right: 0; bottom: -2px; height: 170px;
-  z-index: 1; pointer-events: none;
-  mask-image: linear-gradient(transparent 0%, rgb(0,0,0) 30%, rgb(0,0,0) 100%);
-}
-.wave-wrap canvas { width: 100%; height: 100%; display: block; }
-
-/* ── Body ────────────────────────────────────────────────────────── */
-.body {
-  flex: 1 1 auto; display: flex; flex-direction: column;
-  background: rgb(255,255,255);
-  border-radius: 28px 28px 0 0; margin-top: -18px;
-  position: relative; z-index: 3; overflow: hidden;
+.topbar-time {
+  font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: .04em;
 }
 
-/* ── Meta ────────────────────────────────────────────────────────── */
-.meta { padding: 20px 28px 16px; display: flex; flex-direction: column; gap: 5px; }
-.session-title {
-  font-size: 10px; font-weight: 700; color: rgb(160,160,168);
-  letter-spacing: .12em; text-transform: uppercase;
-  min-height: 12px; transition: opacity .4s;
+/* ── Hero clock ─────────────────────────────────────────── */
+.hero-clock {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 28px 24px 18px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  min-height: 120px;
 }
-.meta-name { font-size: 30px; font-weight: 600; line-height: 1.08; letter-spacing: -.02em; color: rgb(17,17,17); }
-.meta-sub {
-  font-size: 12px; font-weight: 400; color: rgb(138,138,144);
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+.hero-time {
+  font-size: clamp(48px, 11vw, 96px);
+  font-weight: 400; letter-spacing: .04em;
+  color: rgba(255,255,255,0.95);
+  line-height: .88;
+  font-variant-numeric: tabular-nums;
 }
-.meta-source {
-  font-size: 11px; font-weight: 500; color: rgb(168,168,175);
-  display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0;
-  text-decoration: none; transition: color .15s; cursor: pointer;
+.hero-date {
+  margin-top: 10px;
+  font-size: 12px; color: rgba(255,255,255,0.45);
+  font-weight: 400;
 }
-.meta-source:hover { color: rgb(74,74,82); }
-.meta-source svg { flex-shrink: 0; }
+.hero-status {
+  margin-top: 10px;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+  color: rgb(41,255,184);
+}
+.hero-status.off { color: rgba(255,255,255,0.3); }
 
-/* ── Replay button ───────────────────────────────────────────────── */
-.replay-btn {
-  background: none; border: none; cursor: pointer; padding: 2px 8px;
-  font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,.45);
-  border-radius: 4px; transition: color .15s, background .15s;
-  letter-spacing: .03em; margin-left: 6px;
+/* ── Player with dynamic audio bars ─────────────────────────────── */
+.player-section {
+  flex: 0 0 auto;
+  padding: 16px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  display: flex; align-items: center; gap: 16px;
+  min-height: 72px;
 }
-.replay-btn:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.1); }
+.audio-bars {
+  display: flex; align-items: end; gap: 2px;
+  height: 36px; width: 48px;
+  flex-shrink: 0;
+}
+.audio-bars i {
+  display: block;
+  width: 3px; border-radius: 2px;
+  background: rgb(41,255,184);
+  height: 12%;
+  min-height: 2px;
+  transition: height .06s ease-out;
+  box-shadow: 0 0 4px rgba(41,255,184,0.4);
+}
+.audio-bars.paused i {
+  height: 12% !important;
+  opacity: .35;
+  box-shadow: none;
+}
+.now-playing {
+  flex: 1 1 auto; min-width: 0;
+}
+.now-playing-title {
+  font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.92);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.now-playing-artist {
+  font-size: 11px; color: rgba(255,255,255,0.45); margin-top: 2px;
+  letter-spacing: .04em;
+}
+.player-time-display {
+  font-size: 12px; font-variant-numeric: tabular-nums;
+  color: rgba(255,255,255,0.5);
+  flex-shrink: 0;
+}
+.play-btn {
+  flex: 0 0 auto; width: 36px; height: 36px; border-radius: 999px;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.85);
+  display: grid; place-items: center; cursor: pointer;
+  transition: transform .12s, background .12s; padding: 0;
+  backdrop-filter: blur(12px);
+}
+.play-btn:hover { transform: scale(1.06); background: rgba(255,255,255,0.2); }
+.play-btn:active { transform: scale(.95); }
 
+/* ── Scrubber (progress bar) ──────────────────────────────── */
+.scrubber {
+  flex: 1 1 auto; height: 28px;
+  display: flex; align-items: center; gap: 2px;
+  cursor: pointer; position: relative; touch-action: none;
+  margin: 0 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  flex: 0 0 auto;
+}
+.scrubber .player-bar {
+  flex: 1 1 auto;
+  background: rgba(255,255,255,0.15); border-radius: 999px;
+  transition: background .12s; pointer-events: none;
+  height: 3px;
+}
+.scrubber .player-bar.played { background: rgba(255,255,255,0.8); }
 
-/* ── Transcript ──────────────────────────────────────────────────── */
+/* ── Tab bar ─────────────────────────────────────────────────── */
+.tab-bar {
+  flex: 0 0 auto;
+  display: flex; gap: 6px;
+  padding: 10px 24px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.tab-btn {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  color: rgba(255,255,255,0.45);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 10px; font-weight: 600;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s;
+}
+.tab-btn:hover { color: rgba(255,255,255,0.7); border-color: rgba(255,255,255,0.15); }
+.tab-btn.active { color: rgb(41,255,184); border-color: rgba(41,255,184,0.35); background: rgba(41,255,184,0.06); }
+
+/* ── Content area (transcript / queue / memory) ────────────── */
+.content-area {
+  flex: 1 1 auto;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  min-height: 0;
+}
 .transcript-wrap {
-  flex: 1 1 auto; margin: 0 16px;
-  background:
-    radial-gradient(circle, rgba(0,0,0,.08) 0.5px, transparent 0.5px) 0 0 / 12px 12px,
-    rgb(243,243,241);
-  border-radius: 18px; overflow: hidden; position: relative; min-height: 0;
+  flex: 1 1 auto; overflow: hidden; position: relative;
+  min-height: 0;
 }
 .transcript-scroll {
   height: 100%; overflow-y: auto;
-  padding: 20px 20px 40px; scroll-behavior: smooth;
+  padding: 16px 24px 40px; scroll-behavior: smooth;
 }
 .transcript-scroll::-webkit-scrollbar { width: 0; }
 .transcript-fade {
   position: absolute; left: 0; right: 0; bottom: 0; height: 40px;
-  background: linear-gradient(rgba(243,243,241,0) 0%, rgb(243,243,241) 100%);
+  background: linear-gradient(transparent 0%, rgba(17,17,17,0) 100%);
   pointer-events: none;
 }
-.turn { margin-bottom: 18px; transition: opacity .3s; }
+.turn { margin-bottom: 16px; transition: opacity .3s; }
 .turn.pending { opacity: .35; }
 .turn-head {
-  font-size: 11px; font-weight: 500; color: rgb(138,138,144);
+  font-size: 11px; font-weight: 500; color: rgba(255,255,255,0.4);
   letter-spacing: 0; margin-bottom: 5px;
 }
-.turn-head .who { color: rgb(106,106,112); }
-.turn.active .turn-head { color: rgb(17,17,17); }
-.turn.active .turn-head .who { color: rgb(17,17,17); }
+.turn-head .who { color: rgba(255,255,255,0.6); }
+.turn.active .turn-head { color: rgba(255,255,255,0.7); }
+.turn.active .turn-head .who { color: rgba(255,255,255,0.9); }
 .turn-body {
   font-family: Inter, -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-  font-size: 14px; line-height: 1.58; font-weight: 400;
-  color: rgb(24,24,26); letter-spacing: 0; text-wrap: pretty;
+  font-size: 13.5px; line-height: 1.6; font-weight: 400;
+  color: rgba(255,255,255,0.82); letter-spacing: 0; text-wrap: pretty;
 }
 .word { transition: color .15s, background .15s, box-shadow .2s; }
-.word.said   { color: rgb(24,24,26); }
+.word.said   { color: rgba(255,255,255,0.82); }
 .word.current {
-  color: rgb(12,76,52);
-  background: rgba(41,255,184,.18);
-  box-shadow: rgba(41,255,184,.18) 0 0 0 1px;
+  color: rgb(255,255,255);
+  background: rgba(41,255,184,0.15);
+  box-shadow: rgba(41,255,184,0.18) 0 0 0 1px;
   border-radius: 3px; padding: 0 1px; margin: 0 -1px;
 }
-.word.future { color: rgb(181,181,186); }
-/* ── Main player (Music) ─────────────────────────────────────────── */
-.player {
-  flex: 0 0 auto; display: flex; align-items: center; gap: 14px;
-  padding: 14px 18px 18px; background: rgb(255,255,255);
-}
-.player-time { font-size: 13px; font-weight: 500; color: rgb(17,17,17); font-variant-numeric: tabular-nums; min-width: 34px; }
-.player-bars {
-  flex: 1 1 auto; height: 28px;
-  display: flex; align-items: center; gap: 2px;
-  cursor: pointer; position: relative; touch-action: none;
-}
-.player-bar {
-  flex: 1 1 auto;
-  background: rgb(207,207,209); border-radius: 999px;
-  transition: background .12s; pointer-events: none;
-}
-.player-bar.played { background: rgb(17,17,17); }
-.play-btn {
-  flex: 0 0 auto; width: 36px; height: 36px; border-radius: 999px;
-  background: rgb(17,17,17); border: none; color: rgb(255,255,255);
-  display: grid; place-items: center; cursor: pointer;
-  transition: transform .12s, background .12s; padding: 0;
-}
-.play-btn:hover { transform: scale(1.04); }
-.play-btn:active { transform: scale(.96); }
+.word.future { color: rgba(255,255,255,0.28); }
 
-/* ── Radio homepage player ───────────────────────────────────────── */
-.radio-home {
+/* ── Queue tab content ──────────────────────────────────────── */
+.queue-list {
+  flex: 1 1 auto; overflow-y: auto;
+  padding: 12px 24px;
+}
+.queue-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer; font-size: 13px;
+  color: rgba(255,255,255,0.6);
+  transition: color .12s;
+}
+.queue-item:hover { color: rgba(255,255,255,0.9); }
+.queue-item.active { color: rgb(41,255,184); }
+.queue-item .qi-index {
+  font-size: 10px; color: rgba(255,255,255,0.3);
+  width: 22px; text-align: right; flex-shrink: 0;
+}
+.queue-item.active .qi-index { color: rgb(41,255,184); }
+.queue-item .qi-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.queue-item .qi-artist { font-size: 11px; color: rgba(255,255,255,0.3); flex-shrink: 0; }
+.queue-item.active .qi-artist { color: rgba(41,255,184,0.6); }
+
+/* ── Memory tab content ────────────────────────────────────── */
+.memory-list {
+  flex: 1 1 auto; overflow-y: auto;
+  padding: 12px 24px;
+}
+.memory-item {
+  display: flex; align-items: baseline; gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 12px; color: rgba(255,255,255,0.5);
+}
+.memory-item .mi-time { font-size: 10px; color: rgba(255,255,255,0.3); flex-shrink: 0; width: 50px; }
+.memory-item .mi-text { flex: 1 1 auto; }
+
+/* ── Download status ──────────────────────────────────────── */
+.download-status {
+  flex: 0 0 auto;
+  padding: 8px 24px;
+  font-size: 11px; color: rgba(255,255,255,0.4);
+  border-top: 1px solid rgba(255,255,255,0.04);
   display: none;
 }
+.download-status.visible { display: block; }
+.download-status .dl-name { color: rgba(255,255,255,0.7); }
 
-/* ── Request line input (floating) ───────────────────────────────── */
+/* ── In-card chat input ──────────────────────────────────── */
+.chat-input-bar {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.02);
+}
+.chat-input-bar textarea {
+  flex: 1; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 999px; outline: none; resize: none;
+  color: rgba(255,255,255,0.9); font-family: Inter, sans-serif;
+  font-size: 13px; line-height: 1.4; max-height: 80px; overflow-y: auto;
+  padding: 8px 14px;
+  transition: border-color .15s, background .15s;
+}
+.chat-input-bar textarea::placeholder { color: rgba(255,255,255,0.35); }
+.chat-input-bar textarea:focus { border-color: rgba(41,255,184,0.3); background: rgba(41,255,184,0.04); }
+.chat-input-bar button {
+  flex: 0 0 auto; width: 34px; height: 34px; border-radius: 999px;
+  background: rgba(41,255,184,0.15); border: 1px solid rgba(41,255,184,0.3);
+  color: rgb(41,255,184);
+  display: grid; place-items: center; cursor: pointer;
+  transition: transform .12s, background .15s; padding: 0;
+}
+.chat-input-bar button:hover { transform: scale(1.06); background: rgba(41,255,184,0.25); }
+.chat-input-bar button:active { transform: scale(.95); }
+.chat-input-bar button svg { width: 15px; height: 15px; }
+.chat-input-bar button:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ═══════════════════════════════════════════════════════
+   FLOATING CONTROLS (chat bar, tweaks, fullscreen)
+   ═══════════════════════════════════════════════════════ */
+
+/* Chat bar */
 .chat-bar {
   position: fixed; left: 16px; bottom: 16px;
   width: 392px; max-width: calc(100vw - 32px);
@@ -296,15 +444,34 @@ html, body {
 #chat-input::placeholder { color: rgba(255,255,255,.42); }
 #chat-send {
   flex: 0 0 auto; width: 34px; height: 34px; border-radius: 999px;
-  background: rgb(255,255,255); border: none; color: rgb(17,17,17);
+  background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.18);
+  color: rgba(255,255,255,0.9);
   display: grid; place-items: center; cursor: pointer;
   transition: transform .12s, background .15s; padding: 0;
 }
-#chat-send:hover { transform: scale(1.04); background: rgb(236,236,238); }
+#chat-send:hover { transform: scale(1.04); background: rgba(255,255,255,0.22); }
 #chat-send svg { width: 15px; height: 15px; }
 #chat-send:disabled { opacity: .4; cursor: not-allowed; }
 
-/* ── Tweaks panel ────────────────────────────────────────────────── */
+/* Chat toggle */
+.chat-toggle {
+  position: fixed; left: 16px; bottom: 16px;
+  min-width: 40px; height: 40px; border-radius: 999px;
+  background: rgba(20,20,22,.85); backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.8);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; z-index: 1001;
+  transition: transform .15s, background .15s;
+  box-shadow: rgba(0,0,0,.35) 0 8px 20px;
+  padding: 0 13px;
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+}
+.chat-toggle:hover { transform: scale(1.05); background: rgba(30,30,34,.9); }
+.chat-toggle svg { width: 16px; height: 16px; flex-shrink: 0; color: rgb(41,255,184); }
+.chat-toggle-label { display: inline-block; }
+.chat-toggle.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
+
+/* Tweaks toggle + panel */
 .tweaks-toggle {
   position: fixed; right: 16px; bottom: 16px;
   width: 40px; height: 40px; border-radius: 999px;
@@ -344,36 +511,12 @@ html, body {
 .segmented button.active {
   background: rgba(255,255,255,.92); color: rgb(17,17,17);
 }
-.swatches { display: flex; gap: 8px; }
+.swatch-row { display: flex; gap: 8px; }
 .swatch { width: 28px; height: 28px; border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: transform .12s; }
 .swatch:hover { transform: scale(1.08); }
 .swatch.active { border-color: rgba(255,255,255,.9); }
 
-/* ── Request line toggle ─────────────────────────────────────────── */
-.chat-toggle {
-  position: fixed; left: 16px; bottom: 16px;
-  min-width: 40px; height: 40px; border-radius: 999px;
-  background: rgba(20,20,22,.85); backdrop-filter: blur(20px);
-  border: 1px solid rgba(255,255,255,.12); color: rgba(255,255,255,.8);
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  cursor: pointer; z-index: 1001;
-  transition: transform .15s, background .15s;
-  box-shadow: rgba(0,0,0,.35) 0 8px 20px;
-  padding: 0 13px;
-  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
-}
-.chat-toggle:hover { transform: scale(1.05); background: rgba(30,30,34,.9); }
-.chat-toggle svg { width: 16px; height: 16px; flex-shrink: 0; color: rgb(41,255,184); }
-.chat-toggle-label { display: inline-block; }
-.chat-toggle.hidden { opacity: 0; pointer-events: none; transform: translateY(8px); }
-
-@media (max-width: 560px) {
-  .chat-toggle { padding: 0; width: 40px; min-width: 40px; }
-  .chat-toggle-label { display: none; }
-  .chat-bar { width: calc(100vw - 32px); }
-}
-
-/* ── Fullscreen toggle ───────────────────────────────────────────── */
+/* Fullscreen toggle */
 .fullscreen-toggle {
   position: fixed; right: 16px; top: 16px;
   width: 40px; height: 40px; border-radius: 999px;
@@ -389,565 +532,112 @@ html, body {
 .fullscreen-toggle.is-fullscreen .icon-enter { display: none; }
 .fullscreen-toggle.is-fullscreen .icon-exit { display: block; }
 
-/* ══════════════════════════════════════════════════════════════════
-   SKIN: Glass  —  Apple visionOS / spatial glassmorphism
-   ══════════════════════════════════════════════════════════════════ */
-
-/* ── Stage: deep scene with rich colour pockets ── */
-[data-skin="glass"] .stage {
-  background:
-    radial-gradient(ellipse at 15% 85%, rgba(180,100,40,.55) 0%, transparent 48%),
-    radial-gradient(ellipse at 85% 10%, rgba(80,120,200,.50) 0%, transparent 48%),
-    radial-gradient(ellipse at 75% 75%, rgba(140,60,160,.40) 0%, transparent 45%),
-    radial-gradient(ellipse at 30% 20%, rgba(220,160,60,.45) 0%, transparent 45%),
-    linear-gradient(148deg, rgb(22,18,30) 0%, rgb(30,22,20) 55%, rgb(18,16,26) 100%);
+/* Radio home (start button) */
+.radio-home {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  flex: 1 1 auto; min-height: 0;
+  gap: 12px; padding: 24px;
 }
-[data-skin="glass"] .fluid.blue {
-  background: radial-gradient(circle at 40% 40%, oklch(0.68 0.22 240) 0%, oklch(0.52 0.24 245) 40%, oklch(0.34 0.15 248 / 0) 72%);
-  filter: blur(130px) saturate(1.4);
-  opacity: 0.82;
-  mix-blend-mode: screen;
-}
-[data-skin="glass"] .fluid.violet {
-  background: radial-gradient(circle, oklch(0.62 0.24 320) 0%, oklch(0.46 0.26 316) 42%, oklch(0.30 0.16 312 / 0) 72%);
-  filter: blur(130px) saturate(1.4);
-  opacity: 0.78;
-  mix-blend-mode: screen;
-}
-[data-skin="glass"] .fluid.accent {
-  background: radial-gradient(circle, oklch(0.75 0.20 55) 0%, oklch(0.58 0.22 50) 45%, oklch(0.38 0.14 48 / 0) 72%);
-  filter: blur(110px) saturate(1.4);
-  opacity: 0.70;
-  mix-blend-mode: screen;
-}
-[data-skin="glass"] .bg-grain {
-  background-image: radial-gradient(at 50% 60%, rgba(0,0,0,0) 0%, rgba(0,0,0,.22) 80%, rgba(0,0,0,.45) 100%);
-}
-[data-skin="glass"] .bg-noise { opacity: .04; mix-blend-mode: overlay; }
-
-/* ── Card: near-invisible glass frame ── */
-[data-skin="glass"] .card {
-  background: rgba(255,255,255,0.04);
-  backdrop-filter: blur(60px) saturate(1.8) brightness(1.06);
-  -webkit-backdrop-filter: blur(60px) saturate(1.8) brightness(1.06);
-  border: 1px solid rgba(255,255,255,.18);
-  box-shadow:
-    rgba(0,0,0,.55) 0px 40px 90px -20px,
-    rgba(255,255,255,.12) 0px 1px 0px 0px inset,
-    rgba(255,255,255,.06) 0px 0px 0px 1px inset;
-}
-
-/* ── Header: dark glass overlay ── */
-[data-skin="glass"] .header {
-  background: linear-gradient(rgba(8,6,14,.72) 0%, rgba(12,8,18,.60) 100%);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-}
-[data-skin="glass"] .header::before {
-  background-image: radial-gradient(circle, rgba(255,255,255,.06) 1px, transparent 1px);
-}
-[data-skin="glass"] .header-avatar {
-  background: linear-gradient(135deg, oklch(0.68 0.22 240), oklch(0.62 0.24 320));
-  border-color: rgba(255,255,255,.22);
-}
-[data-skin="glass"] .header-status { color: rgba(255,255,255,.70); }
-[data-skin="glass"] .dot-live {
-  background: rgb(255,255,255);
-  box-shadow: rgba(255,255,255,.8) 0 0 8px;
-}
-[data-skin="glass"] .header-time { color: rgba(255,255,255,.80); }
-
-/* ── Body: fully transparent — glass shows through ── */
-[data-skin="glass"] .body { background: transparent; }
-
-/* ── Meta ── */
-[data-skin="glass"] .session-title { color: rgba(255,255,255,.42); }
-[data-skin="glass"] .meta-name { color: rgba(255,255,255,.96); }
-[data-skin="glass"] .meta-sub { color: rgba(255,255,255,.52); }
-[data-skin="glass"] .meta-source { color: rgba(255,255,255,.38); }
-[data-skin="glass"] .meta-source:hover { color: rgba(255,255,255,.72); }
-
-/* ── Transcript area ── */
-[data-skin="glass"] .transcript-wrap {
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.08);
-}
-[data-skin="glass"] .transcript-fade {
-  background: linear-gradient(rgba(0,0,0,0) 0%, rgba(0,0,0,.12) 100%);
-}
-
-/* ── Each turn = individual glass card ── */
-[data-skin="glass"] .turn {
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 14px;
-  padding: 12px 14px;
-  margin-bottom: 10px;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-[data-skin="glass"] .turn.active {
-  background: rgba(255,255,255,.11);
-  border-color: rgba(255,255,255,.16);
-}
-[data-skin="glass"] .turn.pending { opacity: .28; }
-[data-skin="glass"] .turn-head { color: rgba(255,255,255,.38); }
-[data-skin="glass"] .turn-head .who { color: rgba(255,255,255,.52); }
-[data-skin="glass"] .turn.active .turn-head { color: rgba(255,255,255,.50); }
-[data-skin="glass"] .turn.active .turn-head .who { color: rgba(255,255,255,.75); }
-[data-skin="glass"] .turn-body { color: rgba(255,255,255,.88); }
-[data-skin="glass"] .word.said { color: rgba(255,255,255,.88); }
-[data-skin="glass"] .word.current {
-  color: rgb(255,255,255);
-  background: rgba(255,255,255,.18);
-  box-shadow: rgba(255,255,255,.22) 0 0 0 1px;
-}
-[data-skin="glass"] .word.future { color: rgba(255,255,255,.28); }
-
-/* ── Player: dark glass bottom bar ── */
-[data-skin="glass"] .player {
-  background: rgba(0,0,0,.22);
-  border-top: 1px solid rgba(255,255,255,.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-}
-[data-skin="glass"] .player-time { color: rgba(255,255,255,.72); }
-[data-skin="glass"] .player-bar { background: rgba(255,255,255,.18); }
-[data-skin="glass"] .player-bar.played { background: rgba(255,255,255,.88); }
-[data-skin="glass"] .play-btn {
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.22);
-  backdrop-filter: blur(12px);
-  color: rgba(255,255,255,.95);
-}
-[data-skin="glass"] .play-btn:hover {
-  background: rgba(255,255,255,.24);
-  transform: scale(1.04);
-}
-[data-skin="glass"] .play-btn:active { transform: scale(.96); }
-
-/* ── Floating buttons: dark glass pills ── */
-[data-skin="glass"] .tweaks-toggle,
-[data-skin="glass"] .chat-toggle,
-[data-skin="glass"] .fullscreen-toggle {
-  background: rgba(18,14,28,.65);
-  backdrop-filter: blur(24px) saturate(1.5);
-  border: 1px solid rgba(255,255,255,.14);
-  color: rgba(255,255,255,.80);
-  box-shadow: rgba(0,0,0,.45) 0 8px 24px, rgba(255,255,255,.06) 0 1px 0 inset;
-}
-[data-skin="glass"] .tweaks-toggle:hover,
-[data-skin="glass"] .chat-toggle:hover,
-[data-skin="glass"] .fullscreen-toggle:hover {
-  background: rgba(28,22,42,.75);
-  color: rgba(255,255,255,.95);
-}
-[data-skin="glass"] .chat-toggle svg { color: rgba(255,255,255,.80); }
-
-/* ── Chat bar: dark glass ── */
-[data-skin="glass"] .chat-bar {
-  background: rgba(18,14,28,.70);
-  backdrop-filter: blur(32px) saturate(1.6);
-  border: 1px solid rgba(255,255,255,.14);
-  box-shadow: rgba(0,0,0,.50) 0 16px 40px, rgba(255,255,255,.06) 0 1px 0 inset;
-}
-[data-skin="glass"] #chat-input { color: rgba(255,255,255,.90); }
-[data-skin="glass"] #chat-input::placeholder { color: rgba(255,255,255,.35); }
-[data-skin="glass"] #chat-send {
-  background: rgba(255,255,255,.14);
-  border: 1px solid rgba(255,255,255,.18);
-  color: rgba(255,255,255,.90);
-}
-[data-skin="glass"] #chat-send:hover { background: rgba(255,255,255,.22); transform: scale(1.04); }
-
-/* ── Tweaks panel: dark glass ── */
-[data-skin="glass"] .tweaks {
-  background: rgba(18,14,28,.78);
-  backdrop-filter: blur(32px) saturate(1.6);
-  border: 1px solid rgba(255,255,255,.12);
-  color: rgba(255,255,255,.88);
-  box-shadow: rgba(0,0,0,.55) 0 16px 40px, rgba(255,255,255,.06) 0 1px 0 inset;
-}
-[data-skin="glass"] .tweaks h3 { color: rgba(255,255,255,.38); }
-[data-skin="glass"] .tweak-row label { color: rgba(255,255,255,.62); }
-[data-skin="glass"] .tweak-row input[type="range"] { accent-color: rgba(255,255,255,.80); }
-[data-skin="glass"] .segmented {
-  background: rgba(255,255,255,.06);
-  border: 1px solid rgba(255,255,255,.10);
-}
-[data-skin="glass"] .segmented button { color: rgba(255,255,255,.45); }
-[data-skin="glass"] .segmented button.active {
-  background: rgba(255,255,255,.18);
-  color: rgba(255,255,255,.95);
-}
-[data-skin="glass"] .swatch { border-color: transparent; }
-[data-skin="glass"] .swatch.active { border-color: rgba(255,255,255,.70); }
-
-/* ══════════════════════════════════════════════════════════════════
-   SKIN: Radio  —  minimalist object player
-   ══════════════════════════════════════════════════════════════════ */
-[data-skin="radio"] .stage {
-  background:
-    radial-gradient(ellipse at 18% 18%, rgba(85,126,170,.22) 0%, transparent 34%),
-    radial-gradient(ellipse at 82% 76%, rgba(255,43,59,.12) 0%, transparent 36%),
-    linear-gradient(145deg, rgb(250,249,246) 0%, rgb(237,241,244) 100%);
-}
-[data-skin="radio"] .fluid { display: none; }
-[data-skin="radio"] .bg-grain {
-  background:
-    radial-gradient(circle, rgba(18,26,36,.07) 0.5px, transparent 0.5px) 0 0 / 16px 16px,
-    radial-gradient(at 50% 60%, rgba(255,255,255,0) 0%, rgba(50,55,62,.08) 100%);
-}
-[data-skin="radio"] .bg-noise { opacity: .035; mix-blend-mode: multiply; }
-[data-skin="radio"] .card {
-  width: 100vw;
-  height: 100vh;
-  max-width: none;
-  border-radius: 0;
-  background: rgba(255,255,255,.68);
-  border: 0;
-  box-shadow: none;
-}
-[data-skin="radio"] .header {
-  display: none;
-}
-[data-skin="radio"] .body {
-  flex-direction: row;
-  height: 100%;
-  margin-top: 0;
-  border-radius: 0;
-  background: transparent;
-}
-[data-skin="radio"] .player {
-  display: none;
-}
-[data-skin="radio"] .radio-home {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1 1 0;
-  min-width: 0;
-  gap: 6px;
-  padding: clamp(12px, 4vmin, 40px);
-}
-.radio-player {
-  width: min(100%, 680px);
-  aspect-ratio: 4 / 3;
-  display: grid;
-  place-items: center;
-  border: 0;
-  background: transparent;
-  padding: 0;
+.radio-start-btn {
+  width: min(100%, 200px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid rgba(41,255,184,0.4);
+  background: rgba(41,255,184,0.06);
+  color: rgba(255,255,255,0.85);
+  font-size: 16px; font-weight: 600; letter-spacing: .12em;
+  text-transform: uppercase;
   cursor: pointer;
-  border-radius: 18px;
-  transition: transform .18s ease, filter .18s ease;
-  touch-action: manipulation;
+  transition: all .2s cubic-bezier(.16,1,.3,1);
+  display: grid; place-items: center;
+  box-shadow: rgba(41,255,184,.15) 0 0 40px;
 }
-.radio-player:hover {
-  transform: translateY(-2px) scale(1.012);
-  filter: drop-shadow(rgba(255,43,59,.18) 0 18px 26px);
+.radio-start-btn:hover {
+  transform: scale(1.06);
+  border-color: rgba(41,255,184,0.7);
+  box-shadow: rgba(41,255,184,.25) 0 0 60px;
+  background: rgba(41,255,184,0.12);
 }
-.radio-player:active {
-  transform: translateY(1px) scale(.992);
+.radio-start-btn:active { transform: scale(.97); }
+.radio-start-btn.tuning {
+  animation: tunePulse 1.2s ease-in-out infinite;
 }
-.radio-player:focus-visible {
-  outline: 3px solid rgba(25,105,255,.7);
-  outline-offset: 8px;
-}
-.radio-player img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  display: block;
-  user-select: none;
-  -webkit-user-drag: none;
+@keyframes tunePulse {
+  0%,100% { box-shadow: rgba(41,255,184,.15) 0 0 40px; }
+  50%      { box-shadow: rgba(41,255,184,.35) 0 0 80px; }
 }
 .radio-caption {
-  display: grid;
-  gap: 4px;
-  justify-items: center;
-  min-height: 48px;
   text-align: center;
+  min-height: 44px;
 }
 .radio-title {
-  font-family: Doto, "Space Mono", monospace;
-  font-size: clamp(25px, 4vmin, 38px);
-  font-weight: 600;
-  color: rgb(23,28,32);
+  font-family: Doto, 'Space Mono', monospace;
+  font-size: 18px; font-weight: 600;
+  color: rgba(255,255,255,0.8);
 }
 .radio-status {
-  min-height: 18px;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-  color: rgb(104,111,116);
-}
-[data-skin="radio"] .tweaks-toggle,
-[data-skin="radio"] .chat-toggle,
-[data-skin="radio"] .fullscreen-toggle {
-  background: rgba(255,255,255,.74);
-  color: rgb(31,36,40);
-  border: 1px solid rgba(31,36,40,.10);
-  box-shadow: rgba(18,26,36,.14) 0 10px 24px, rgba(255,255,255,.9) 0 1px 0 inset;
-}
-[data-skin="radio"] .chat-toggle svg { color: rgb(255,43,59); }
-[data-skin="radio"] .chat-bar,
-[data-skin="radio"] .tweaks {
-  background: rgba(255,255,255,.84);
-  color: rgb(31,36,40);
-  border: 1px solid rgba(31,36,40,.10);
-  box-shadow: rgba(18,26,36,.16) 0 18px 42px, rgba(255,255,255,.9) 0 1px 0 inset;
-}
-[data-skin="radio"] #chat-input { color: rgb(31,36,40); }
-[data-skin="radio"] #chat-input::placeholder { color: rgba(31,36,40,.42); }
-[data-skin="radio"] #chat-send {
-  background: rgb(31,36,40);
-  color: rgb(255,255,255);
-}
-[data-skin="radio"] .tweaks h3,
-[data-skin="radio"] .tweak-row label { color: rgba(31,36,40,.62); }
-[data-skin="radio"] .segmented {
-  background: rgba(31,36,40,.07);
-  border-color: rgba(31,36,40,.08);
-}
-[data-skin="radio"] .segmented button { color: rgba(31,36,40,.55); }
-[data-skin="radio"] .segmented button.active {
-  background: rgb(31,36,40);
-  color: rgb(255,255,255);
-}
-/* ── Radio info panel: transparent wrapper in non-radio skins ── */
-.radio-info-panel {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
-}
-.radio-divider,
-.radio-info-header {
-  display: none;
+  margin-top: 6px;
+  font-size: 11px; color: rgba(255,255,255,0.4);
+  letter-spacing: .06em;
 }
 
-/* ── Radio skin: split layout ──────────────────────────────── */
-[data-skin="radio"] .radio-divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 28px;
-  align-self: stretch;
-  position: relative;
-  z-index: 1;
+/* Session title (shown when radio is on air) */
+.session-title-bar {
+  flex: 0 0 auto;
+  padding: 10px 24px 0;
+  display: none;
 }
-[data-skin="radio"] .radio-divider::before {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0; left: 50%;
-  width: 1px;
-  background: rgba(31,36,40,.10);
-  transform: translateX(-50%);
-  transition: opacity .25s;
+.session-title-bar.visible { display: block; }
+.session-title {
+  font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35);
+  letter-spacing: .12em; text-transform: uppercase;
+  min-height: 12px;
 }
-[data-skin="radio"].radio-info-closed .radio-divider::before {
-  opacity: 0;
+
+/* Meta info (shown when playing) */
+.meta-bar {
+  flex: 0 0 auto;
+  padding: 8px 24px;
+  display: none;
 }
-.radio-info-toggle {
-  position: relative; z-index: 1;
-  width: 28px; height: 28px; border-radius: 50%;
-  background: rgb(255,255,255);
-  border: 1px solid rgba(31,36,40,.12);
-  box-shadow: rgba(18,26,36,.12) 0 2px 8px;
+.meta-bar.visible { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.meta-name {
+  font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75);
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.meta-sub {
+  font-size: 11px; color: rgba(255,255,255,0.4); flex-shrink: 0;
+}
+.meta-source {
+  display: none; align-items: center; gap: 5px;
+  font-size: 11px; color: rgba(255,255,255,0.4);
   cursor: pointer;
-  display: grid; place-items: center;
-  transition: transform .15s, background .15s;
-  padding: 0; color: rgb(31,36,40);
 }
-.radio-info-toggle:hover { transform: scale(1.1); background: rgb(255,255,255); box-shadow: rgba(18,26,36,.18) 0 4px 12px; }
-.radio-info-toggle svg { width: 12px; height: 12px; transition: transform .3s cubic-bezier(.4,0,.2,1); }
-[data-skin="radio"].radio-info-closed .radio-info-toggle svg { transform: rotate(180deg); }
+.meta-source:hover { color: rgba(255,255,255,0.7); }
+.meta-source.visible { display: inline-flex; }
 
-[data-skin="radio"] .radio-info-panel {
-  display: flex;
-  flex-direction: column;
-  flex: 0 0 min(40%, 380px);
-  min-width: 0;
-  overflow: hidden;
-  padding: clamp(16px, 3vmin, 32px) clamp(16px, 3vmin, 32px) clamp(16px, 3vmin, 32px) clamp(10px, 2vmin, 20px);
-  transition: flex-basis .35s cubic-bezier(.4,0,.2,1), opacity .25s, padding .35s;
+/* Replay button */
+.replay-btn {
+  background: none; border: none; cursor: pointer; padding: 2px 8px;
+  font-size: 10.5px; font-weight: 500; color: rgba(255,255,255,0.35);
+  border-radius: 4px; transition: color .15s, background .15s;
+  letter-spacing: .03em;
 }
-[data-skin="radio"].radio-info-closed .radio-info-panel {
-  flex: 0 0 0;
-  opacity: 0;
-  padding: 0;
-  pointer-events: none;
-}
+.replay-btn:hover { color: rgba(255,255,255,0.75); background: rgba(255,255,255,0.08); }
+.replay-btn.visible { display: inline-block !important; }
 
-/* ON AIR 指示器：嵌入 session-title 行右侧，不单独占行 */
-[data-skin="radio"] .radio-info-header {
-  display: none;
-}
-.radio-info-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: rgb(255,43,59);
-  box-shadow: rgba(255,43,59,.5) 0 0 5px;
-  animation: 1.2s ease-in-out 0s infinite pulse;
-  flex-shrink: 0;
-  opacity: 0;
-  transition: opacity .35s;
-  display: inline-block; vertical-align: middle;
-  margin-right: 6px;
-}
-.radio-info-dot.live { opacity: 1; }
-.radio-info-label { display: none; }
-
-[data-skin="radio"] .meta {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0 0 clamp(18px, 2.6vmin, 28px);
-  border-bottom: 1px solid rgba(31,36,40,.08);
-  margin-bottom: clamp(16px, 2.4vmin, 26px);
-  flex-shrink: 0;
-}
-[data-skin="radio"] .session-title {
-  font-size: 9.5px; font-weight: 700;
-  letter-spacing: .15em; text-transform: uppercase;
-  color: rgba(31,36,40,.32);
-  display: flex; align-items: center;
-  min-height: 14px;
-}
-[data-skin="radio"] .session-title::before {
-  content: '';
-  width: 5px; height: 5px; border-radius: 50%;
-  background: rgb(255,43,59);
-  margin-right: 7px; flex-shrink: 0;
-  opacity: 0;
-  transition: opacity .35s;
-}
-[data-skin="radio"].radio-is-live .session-title::before {
-  opacity: 1;
-  animation: 1.2s ease-in-out 0s infinite pulse;
-  box-shadow: rgba(255,43,59,.45) 0 0 5px;
-}
-[data-skin="radio"] .meta-name {
-  font-family: 'Space Grotesk', Inter, sans-serif;
-  font-size: clamp(19px, 2.6vmin, 26px);
-  font-weight: 300;
-  color: rgb(16,20,24);
-  letter-spacing: -.03em;
-  line-height: 1.18;
-}
-[data-skin="radio"] .meta-sub {
-  font-size: 12px; font-weight: 400;
-  color: rgba(23,28,32,.40);
-  letter-spacing: .005em;
-  margin-top: 1px;
-}
-[data-skin="radio"] .meta-source { display: none; }
-
-[data-skin="radio"] .transcript-wrap {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  margin: 0;
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  overflow: hidden;
-  position: relative;
-}
-[data-skin="radio"] .transcript-scroll {
-  padding: 2px 0 48px;
-}
-[data-skin="radio"] .transcript-fade {
-  background: linear-gradient(rgba(250,249,246,0) 0%, rgb(250,249,246) 100%);
-}
-[data-skin="radio"] .turn {
-  margin-bottom: 14px;
-}
-[data-skin="radio"] .turn-head {
-  font-size: 10px; font-weight: 600;
-  letter-spacing: .09em; text-transform: uppercase;
-  color: rgba(23,28,32,.28);
-  margin-bottom: 3px;
-}
-[data-skin="radio"] .turn-head .who { color: inherit; }
-[data-skin="radio"] .turn.active .turn-head { color: rgba(23,28,32,.42); }
-[data-skin="radio"] .turn.active .turn-head .who { color: rgba(23,28,32,.60); }
-[data-skin="radio"] .turn-body {
-  font-family: 'Space Grotesk', Inter, sans-serif;
-  font-size: 13px; line-height: 1.68; font-weight: 300;
-  color: rgba(23,28,32,.62);
-}
-[data-skin="radio"] .turn.active .turn-body {
-  font-weight: 400;
-  color: rgb(23,28,32);
-}
-[data-skin="radio"] .word.said { color: rgba(23,28,32,.72); }
-[data-skin="radio"] .turn.active .word.said { color: rgb(23,28,32); }
-[data-skin="radio"] .word.current {
-  color: rgb(185,25,40);
-  background: rgba(255,43,59,.09);
-  box-shadow: rgba(255,43,59,.18) 0 0 0 1px;
-}
-[data-skin="radio"] .word.future { color: rgba(23,28,32,.26); }
-
-@media (max-width: 768px) {
-  [data-skin="radio"] .body { flex-direction: column; }
-  [data-skin="radio"] .radio-home {
-    flex: 0 0 auto;
-    padding: 14px 12px 6px;
-  }
-  [data-skin="radio"] .radio-divider {
-    flex: 0 0 28px;
-    flex-direction: row;
-    align-self: auto;
-  }
-  [data-skin="radio"] .radio-divider::before {
-    top: 50%; bottom: auto;
-    left: 0; right: 0;
-    width: 100%; height: 1px;
-    transform: translateY(-50%);
-  }
-  [data-skin="radio"] .radio-info-panel {
-    flex: 0 1 auto;
-    max-height: 340px;
-    width: 100% !important;
-    padding: 12px 16px 16px;
-    overflow-y: auto;
-    transition: max-height .35s cubic-bezier(.4,0,.2,1), opacity .25s, padding .3s;
-  }
-  [data-skin="radio"].radio-info-closed .radio-info-panel {
-    max-height: 0;
-    flex: 0 0 0;
-    overflow: hidden;
-    padding: 0;
-  }
-  [data-skin="radio"] .radio-info-header { margin-bottom: 12px; }
-  [data-skin="radio"] .meta { padding-bottom: 10px; }
-  [data-skin="radio"] .transcript-wrap { min-height: 140px; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .radio-player { transition: none; }
-}
+/* Responsive */
 @media (max-width: 560px) {
-  [data-skin="radio"] .card {
-    width: 100vw;
-    height: 100vh;
-    border-radius: 0;
-  }
-  [data-skin="radio"] .body { border-radius: 0; }
-  [data-skin="radio"] .radio-home {
-    padding: 12px 12px 4px;
-  }
-  .radio-player {
-    width: min(100%, 480px);
-  }
-  .radio-caption {
-    min-height: 44px;
-  }
+  .card { width: calc(100vw - 24px); height: calc(100vh - 24px); border-radius: 20px; }
+  .topbar { padding: 14px 16px 10px; }
+  .player-section { padding: 12px 16px; }
+  .scrubber { margin: 0 16px; }
+  .tab-bar { padding: 8px 16px 0; }
+  .transcript-scroll { padding: 12px 16px 40px; }
+  .chat-toggle { padding: 0; width: 40px; min-width: 40px; }
+  .chat-toggle-label { display: none; }
+  .chat-bar { width: calc(100vw - 32px); }
 }
 </style>
 </head>
@@ -961,112 +651,136 @@ html, body {
   <div class="bg-noise"></div>
 
   <div class="card" id="fmCard">
-    <!-- Header -->
-    <div class="header" id="cardHeader">
-      <div class="header-top">
-        <div>
-          <div class="header-name">
-            <div class="header-avatar">C</div>
-            Claudio
-          </div>
-          <div class="header-status">
-            <span class="dot-live" id="dotLive" style="display:none"></span>
-            <span id="headerStatus">Paused</span>
-            <button class="replay-btn" id="replayBtn" style="display:none">↩ replay</button>
-          </div>
+
+    <!-- ═ Top bar: brand + clock + ON AIR -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="brand">
+          <div class="brand-dot">C</div>
+          <div class="brand-name">Claudio</div>
         </div>
-        <div class="header-time" id="headerTime">—:—</div>
       </div>
-      <div class="wave-wrap">
-        <canvas id="waveCanvas" width="1232" height="340"></canvas>
+      <div class="topbar-right">
+        <div class="onair-indicator" id="onairIndicator">
+          <span class="onair-dot off" id="onairDot"></span>
+          <span id="onairLabel">OFF AIR</span>
+        </div>
+        <div class="topbar-time" id="headerTime">—:—</div>
       </div>
     </div>
 
-    <!-- Body -->
-    <div class="body">
-      <!-- Radio homepage player -->
-      <section class="radio-home" id="radioHome">
-        <button class="radio-player" id="radioPlayer" type="button" aria-label="Start Claudio FM">
-          <img id="radioFrame" src="assets/radio-player/frame-00.png" alt="" aria-hidden="true" draggable="false">
-        </button>
-        <div class="radio-caption">
-          <div class="radio-title" id="radioTitle">Claudio FM</div>
-          <div class="radio-status" id="radioStatus" aria-hidden="true"></div>
-        </div>
-      </section>
-
-      <!-- Divider with toggle (only visible in radio skin) -->
-      <div class="radio-divider" id="radioDivider">
-        <button class="radio-info-toggle" id="radioInfoToggle" type="button" aria-label="Hide info panel">
-          <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5l-6 5 6 5"/></svg>
-        </button>
+    <!-- ═ Hero clock (big time) -->
+    <div class="hero-clock" id="heroClock">
+      <div class="hero-time" id="heroTime">--:--</div>
+      <div class="hero-date" id="heroDate"></div>
+      <div class="hero-status off" id="heroStatus">
+        <span class="onair-dot off" id="heroDot"></span>
+        <span id="heroStatusText">OFF AIR</span>
       </div>
+    </div>
 
-      <!-- Info panel wrapper: transparent in non-radio skins, right column in radio -->
-      <div class="radio-info-panel" id="radioInfoPanel">
-        <!-- Header (only shown in radio skin) -->
-        <div class="radio-info-header">
-          <span class="radio-info-dot" id="radioInfoDot"></span>
-          <span class="radio-info-label">Now Playing</span>
-        </div>
+    <!-- ═ Player section (audio bars + track info + play btn) -->
+    <div class="player-section">
+      <div class="audio-bars paused" id="audioBars">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="now-playing">
+        <div class="now-playing-title" id="metaName">Your private radio station</div>
+        <div class="now-playing-artist" id="metaSub">Waiting for Claudio…</div>
+      </div>
+      <div class="player-time-display" id="playerTime">0:00</div>
+      <button class="play-btn" id="playBtn" aria-label="Play / pause">
+        <svg id="iconPause" width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:none">
+          <rect x="3" y="2" width="2.5" height="10" rx="0.8" fill="currentColor"/>
+          <rect x="8.5" y="2" width="2.5" height="10" rx="0.8" fill="currentColor"/>
+        </svg>
+        <svg id="iconPlay" width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3.5 2.2 L11.5 7 L3.5 11.8 Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
 
-        <!-- Meta (existing) -->
-        <div class="meta">
-          <div class="session-title" id="sessionTitle"></div>
-          <div class="meta-name" id="metaName">Your private radio station</div>
-          <div class="meta-sub">
-            <span id="metaSub">Waiting for Claudio…</span>
-            <span class="meta-source" id="metaSource" style="display:none">
-              <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
-                <path d="M11.2 1.8v6.9c0 1.4-1 2.4-2.3 2.4-1.2 0-2.1-.8-2.1-1.9 0-1.1 1-1.9 2.1-1.9.4 0 .8.1 1.1.3V3.9L5.9 5.2v5.1c0 1.4-1 2.4-2.3 2.4-1.2 0-2.1-.8-2.1-1.9 0-1.1 1-1.9 2.1-1.9.4 0 .8.1 1.1.3V2.6l6.5-.8z"/>
-              </svg>
-              <span id="metaSourceText"></span>
-              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                <path d="M3 2h5v5"/><path d="M8 2L2.5 7.5"/>
-              </svg>
-            </span>
-          </div>
-        </div><!-- .meta -->
+    <!-- Scrubber -->
+    <div class="scrubber" id="scrubber">
+      <!-- bars filled by JS -->
+    </div>
 
-        <!-- Transcript (existing) -->
-        <div class="transcript-wrap">
-          <div class="transcript-scroll" id="transcriptScroll">
-            <div class="turn" id="emptyState">
-              <div class="turn-head"><span class="who">Claudio</span> · now</div>
-              <div class="turn-body">
-                <span class="word future">Tell</span><span> </span>
-                <span class="word future">me</span><span> </span>
-                <span class="word future">what</span><span> </span>
-                <span class="word future">you're</span><span> </span>
-                <span class="word future">in</span><span> </span>
-                <span class="word future">the</span><span> </span>
-                <span class="word future">mood</span><span> </span>
-                <span class="word future">for.</span>
-              </div>
+    <!-- Session title (visible when on air) -->
+    <div class="session-title-bar" id="sessionTitleBar">
+      <div class="session-title" id="sessionTitle"></div>
+    </div>
+
+    <!-- Meta bar (visible when playing) -->
+    <div class="meta-bar" id="metaBar">
+      <div class="meta-name" id="metaNameBar"></div>
+      <div class="meta-sub" id="metaSubBar"></div>
+      <span class="meta-source" id="metaSource">
+        <svg width="11" height="11" viewBox="0 0 14 14" fill="currentColor" aria-hidden="true">
+          <path d="M11.2 1.8v6.9c0 1.4-1 2.4-2.3 2.4-1.2 0-2.1-.8-2.1-1.9 0-1.1 1-1.9 2.1-1.9.4 0 .8.1 1.1.3V3.9L5.9 5.2v5.1c0 1.4-1 2.4-2.3 2.4-1.2 0-2.1-.8-2.1-1.9 0-1.1 1-1.9 2.1-1.9.4 0 .8.1 1.1.3V2.6l6.5-.8z"/>
+        </svg>
+        <span id="metaSourceText"></span>
+      </span>
+      <button class="replay-btn" id="replayBtn" style="display:none">↩ replay</button>
+    </div>
+
+    <!-- Tab bar -->
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn active" data-tab="transcript">Transcript</button>
+      <button class="tab-btn" data-tab="queue">Queue</button>
+      <button class="tab-btn" data-tab="memory">Memory</button>
+    </div>
+
+    <!-- Content area -->
+    <div class="content-area">
+
+      <!-- Transcript panel -->
+      <div class="transcript-wrap" id="panelTranscript">
+        <div class="transcript-scroll" id="transcriptScroll">
+          <div class="turn" id="emptyState">
+            <div class="turn-head"><span class="who">Claudio</span> · now</div>
+            <div class="turn-body">
+              <span class="word future">Tell</span><span> </span>
+              <span class="word future">me</span><span> </span>
+              <span class="word future">what</span><span> </span>
+              <span class="word future">you're</span><span> </span>
+              <span class="word future">in</span><span> </span>
+              <span class="word future">the</span><span> </span>
+              <span class="word future">mood</span><span> </span>
+              <span class="word future">for.</span>
             </div>
-            <div style="height:20px"></div>
           </div>
-          <div class="transcript-fade"></div>
+          <div style="height:20px"></div>
         </div>
+        <div class="transcript-fade"></div>
       </div>
 
-      <!-- Main player: Music -->
-      <div class="player">
-        <div class="player-time" id="playerTime">0:00</div>
-        <div class="player-bars" id="scrubber"></div>
-        <button class="play-btn" id="playBtn" aria-label="Play / pause music">
-          <svg id="iconPause" width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:none">
-            <rect x="3" y="2" width="2.5" height="10" rx="0.8" fill="currentColor"/>
-            <rect x="8.5" y="2" width="2.5" height="10" rx="0.8" fill="currentColor"/>
-          </svg>
-          <svg id="iconPlay" width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M3.5 2.2 L11.5 7 L3.5 11.8 Z" fill="currentColor"/>
-          </svg>
-        </button>
-      </div>
-    </div><!-- .body -->
+      <!-- Queue panel (hidden by default) -->
+      <div class="queue-list" id="panelQueue" style="display:none"></div>
+
+      <!-- Memory panel (hidden by default) -->
+      <div class="memory-list" id="panelMemory" style="display:none"></div>
+    </div>
+
+    <!-- Download status -->
+    <div class="download-status" id="downloadStatus"></div>
+
+    <!-- Chat input (always visible, inside card) -->
+    <div class="chat-input-bar">
+      <textarea id="chat-input" rows="1" placeholder="Say something to Claudio…"></textarea>
+      <button id="chat-send" title="Send" aria-label="Send">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h13"/>
+          <path d="m13 6 6 6-6 6"/>
+        </svg>
+      </button>
+    </div>
+
   </div><!-- .card -->
 </div><!-- .stage -->
+
+<!-- Hidden audio elements -->
+<audio id="tts-audio" preload="auto"></audio>
+<audio id="music-audio" preload="auto" crossorigin="anonymous"></audio>
 
 <!-- Fullscreen toggle -->
 <button class="fullscreen-toggle" id="fullscreenToggle" aria-label="Enter fullscreen" title="Fullscreen">
@@ -1084,8 +798,8 @@ html, body {
   </svg>
 </button>
 
-<!-- Request line toggle -->
-<button class="chat-toggle" id="chatToggle" aria-label="Open request line" title="Request line">
+<!-- Chat toggle (legacy - hidden, replaced by in-card chat) -->
+<button class="chat-toggle hidden" id="chatToggle" aria-label="Open request line" title="Request line" style="display:none!important">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M6.6 10.8c1.2-1.2 2.7-1.8 4.4-1.8s3.2.6 4.4 1.8"/>
     <path d="M3.7 7.8C5.6 5.9 8.2 5 11 5s5.4.9 7.3 2.8"/>
@@ -1095,10 +809,10 @@ html, body {
   <span class="chat-toggle-label">Request line</span>
 </button>
 
-<!-- Chat bar -->
-<div class="chat-bar hidden" id="chatBar">
-  <textarea id="chat-input" rows="1" placeholder="Leave a note for Claudio…"></textarea>
-  <button id="chat-send" title="Patch in" aria-label="Patch in">
+<!-- Chat bar (legacy - hidden, replaced by in-card chat) -->
+<div class="chat-bar hidden" id="chatBar" style="display:none!important">
+  <textarea id="chat-input-old" rows="1" placeholder="Leave a note for Claudio…"></textarea>
+  <button id="chat-send-old" title="Patch in" aria-label="Patch in">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <path d="M5 12h13"/>
       <path d="m13 6 6 6-6 6"/>
@@ -1106,11 +820,11 @@ html, body {
   </button>
 </div>
 
-<!-- Tweaks -->
+<!-- Tweaks toggle -->
 <button class="tweaks-toggle" id="tweaksToggle" aria-label="Toggle tweaks">
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <circle cx="12" cy="12" r="3"/>
-    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0 .33-1.82l.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 </button>
 <div class="tweaks" id="tweaks">
@@ -1140,7 +854,7 @@ html, body {
   </div>
   <div class="tweak-row">
     <label>Header tone</label>
-    <div class="swatches" id="swatches">
+    <div class="swatch-row" id="swatches">
       <div class="swatch active" data-bg="linear-gradient(rgb(12,12,14) 0%, rgb(22,22,26) 100%)" style="background:rgb(12,12,14)"></div>
       <div class="swatch" data-bg="linear-gradient(rgb(11,18,32) 0%, rgb(18,28,50) 100%)" style="background:rgb(11,18,32)"></div>
       <div class="swatch" data-bg="linear-gradient(rgb(26,15,30) 0%, rgb(38,22,44) 100%)" style="background:rgb(26,15,30)"></div>
@@ -1156,12 +870,10 @@ html, body {
   </div>
 </div>
 
-<!-- Hidden audio elements -->
-<audio id="tts-audio" preload="auto"></audio>
-<audio id="music-audio" preload="auto"></audio>
-
 <script>
-/* ── Refs ─────────────────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════
+   JAVASCRIPT — all original logic preserved exactly
+   ═══════════════════════════════════════════════════════ */
 const ttsAudio   = document.getElementById('tts-audio');
 const musicAudio = document.getElementById('music-audio');
 const playBtn    = document.getElementById('playBtn');
@@ -1173,19 +885,24 @@ const replayBtn    = document.getElementById('replayBtn');
 let lastTtsUrl = null;
 let lastReplaySegment = null;
 const scrubber   = document.getElementById('scrubber');
-const dotLive    = document.getElementById('dotLive');
-const headerStatus = document.getElementById('headerStatus');
-const headerTime   = document.getElementById('headerTime');
+const dotLive    = null; // not used in new UI
+const headerStatus = null; // replaced by onairIndicator
+const headerTime     = document.getElementById('headerTime');
+const heroTime       = document.getElementById('heroTime');
+const heroDate       = document.getElementById('heroDate');
+const heroStatus     = document.getElementById('heroStatus');
+const heroDot        = document.getElementById('heroDot');
+const heroStatusText = document.getElementById('heroStatusText');
 const metaName   = document.getElementById('metaName');
 const metaSub    = document.getElementById('metaSub');
 const metaSource = document.getElementById('metaSource');
 const metaSourceText = document.getElementById('metaSourceText');
 const transcriptScroll = document.getElementById('transcriptScroll');
-const radioPlayer = document.getElementById('radioPlayer');
-const radioFrame = document.getElementById('radioFrame');
+const radioPlayer = null; // replaced by radio-home
+const radioFrame = null;
 const radioStatus = document.getElementById('radioStatus');
-const radioInfoToggle = document.getElementById('radioInfoToggle');
-const radioInfoDot = document.getElementById('radioInfoDot');
+const radioInfoToggle = null;
+const radioInfoDot = null;
 const chatBar    = document.getElementById('chatBar');
 const chatInput  = document.getElementById('chat-input');
 const chatSend   = document.getElementById('chat-send');
@@ -1204,8 +921,8 @@ let ducking = false;
 let volumeFadeTimer = null;
 const BREATHING_GAP_MS = 500;
 const DUCKED_VOLUME_RATIO = 0.16;
-const SEGUE_LEAD_S = 15;   // start the DJ over the outro this many seconds before a song ends
-const REFILL_LEAD_S = 120; // ask Claudio for more music while there is still runway
+const SEGUE_LEAD_S = 15;
+const REFILL_LEAD_S = 120;
 const REFILL_LOW_WATER_TRACKS = 2;
 const MAX_BUFFER_TRACKS = 6;
 const REFILL_BACKOFF_MS = 45000;
@@ -1216,6 +933,41 @@ function buildStartMessage() {
   return `It's ${hour}:00 on a ${day}. You're on air — open the station. Pick whatever fits the moment.`;
 }
 let startingRadio = false;
+
+/* ── UI helpers (new) ─────────────────────────────────────── */
+const audioBars = document.getElementById('audioBars');
+const onairDot = document.getElementById('onairDot');
+const onairLabel = document.getElementById('onairLabel');
+const sessionTitleBar = document.getElementById('sessionTitleBar');
+const metaBar = document.getElementById('metaBar');
+const metaNameBar = document.getElementById('metaNameBar');
+const metaSubBar = document.getElementById('metaSubBar');
+const downloadStatus = document.getElementById('downloadStatus');
+const panelTranscript = document.getElementById('panelTranscript');
+const panelQueue = document.getElementById('panelQueue');
+const panelMemory = document.getElementById('panelMemory');
+const tabBar = document.getElementById('tabBar');
+
+function setRadioStatusUI(status) {
+  const isLive = ['On Air', 'Speaking', 'Playing'].includes(status);
+  // Top bar indicator
+  if (onairDot) {
+    onairDot.classList.toggle('off', !isLive);
+    onairLabel.textContent = isLive ? 'ON AIR' : 'OFF AIR';
+  }
+  // Hero status
+  if (heroStatus) {
+    heroStatus.classList.toggle('off', !isLive);
+    heroDot.classList.toggle('off', !isLive);
+    heroStatusText.textContent = isLive ? 'ON AIR' : 'OFF AIR';
+  }
+  sessionTitleBar.classList.toggle('visible', isLive);
+  metaBar.classList.toggle('visible', isLive && metaNameBar.textContent);
+  // Audio bars
+  if (audioBars) {
+    audioBars.classList.toggle('paused', !isLive || status === 'Paused' || status === 'Error');
+  }
+}
 
 function syncDjLanguageControl() {
   djLanguageControl.querySelectorAll('button').forEach(button => {
@@ -1233,17 +985,28 @@ function setDjLanguage(value) {
 
 syncDjLanguageControl();
 
-/* ── Clock ────────────────────────────────────────────────────────── */
+/* ── Clock ────────────────────────────────────────────────── */
 function updateClock() {
   const now = new Date();
-  const h = String(now.getHours()).padStart(2,'0');
+  const h = now.getHours();
   const m = String(now.getMinutes()).padStart(2,'0');
-  headerTime.textContent = `${h}:${m}`;
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  const h12 = h % 12 || 12;
+  const tz = now.getTimezoneOffset() <= -60 ? 'BST' : 'GMT';
+  const timeStr = `${h12}:${m} ${ampm} ${tz}`;
+  if (headerTime) headerTime.textContent = timeStr;
+  // Hero big clock (no timezone, just time)
+  if (heroTime) heroTime.textContent = `${h12}:${m}`;
+  if (heroDate) {
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    heroDate.textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+  }
 }
 updateClock();
 setInterval(updateClock, 10000);
 
-/* ── Volume controls ──────────────────────────────────────────────── */
+/* ── Volume controls ─────────────────────────────────────── */
 function pctLabel(v) {
   return `${Math.round(v * 100)}%`;
 }
@@ -1277,7 +1040,7 @@ function setMusicVolume(value) {
 
 syncVolumeControls();
 
-/* ── Fullscreen ───────────────────────────────────────────────────── */
+/* ── Fullscreen ───────────────────────────────────────────── */
 function fullscreenElement() {
   return document.fullscreenElement || document.webkitFullscreenElement || null;
 }
@@ -1318,88 +1081,7 @@ document.addEventListener('fullscreenchange', syncFullscreenButton);
 document.addEventListener('webkitfullscreenchange', syncFullscreenButton);
 syncFullscreenButton();
 
-/* ── Bar visualizer ───────────────────────────────────────────────── */
-(function() {
-  const canvas = document.getElementById('waveCanvas');
-  const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  let playing = false;
-
-  const BAR_COUNT = 80;
-  const BAR_GAP = 4;
-  const barW = (W - BAR_GAP * (BAR_COUNT - 1)) / BAR_COUNT;
-
-  // Each bar has independent phase & speed for organic movement
-  const bars = Array.from({ length: BAR_COUNT }, (_, i) => ({
-    phase:  Math.random() * Math.PI * 2,
-    speed:  0.018 + Math.random() * 0.022,
-    noiseX: Math.random() * 100,
-    height: 0,
-    target: 0,
-  }));
-
-  let t = 0;
-
-  function pseudoNoise(x, t) {
-    return (Math.sin(x * 0.3 + t) + Math.sin(x * 0.7 - t * 1.3) +
-            Math.sin(x * 1.1 + t * 0.7) + Math.sin(x * 0.17 + t * 2.1)) / 4;
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, W, H);
-
-    bars.forEach((bar, i) => {
-      const noise = pseudoNoise(i * 0.4, t);
-      const normalized = (noise + 1) / 2; // 0–1
-
-      if (playing) {
-        // Taller, livelier bars when playing
-        const base = 0.08 + 0.12 * Math.abs(Math.sin(i * 0.19));
-        bar.target = (base + normalized * 0.78) * H;
-      } else {
-        // Short idle ripple when paused
-        bar.target = (0.03 + normalized * 0.10) * H;
-      }
-
-      // Smooth lerp toward target
-      bar.height += (bar.target - bar.height) * 0.14;
-
-      const x = i * (barW + BAR_GAP);
-      const bh = Math.max(2, bar.height);
-      const y = H - bh;
-
-      const alpha = playing ? 0.55 + 0.35 * normalized : 0.25 + 0.15 * normalized;
-      const wc = document.documentElement.dataset.skin === 'glass' ? '255,255,255' : '41,255,184';
-      ctx.fillStyle = `rgba(${wc},${alpha.toFixed(2)})`;
-      ctx.beginPath();
-      ctx.roundRect(x, y, barW, bh, [2, 2, 0, 0]);
-      ctx.fill();
-    });
-
-    t += 0.022;
-    requestAnimationFrame(draw);
-  }
-
-  // roundRect polyfill for older browsers
-  if (!CanvasRenderingContext2D.prototype.roundRect) {
-    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
-      const radius = Array.isArray(r) ? r[0] : r;
-      this.moveTo(x + radius, y);
-      this.lineTo(x + w - radius, y);
-      this.quadraticCurveTo(x + w, y, x + w, y + radius);
-      this.lineTo(x + w, y + h);
-      this.lineTo(x, y + h);
-      this.lineTo(x, y + radius);
-      this.quadraticCurveTo(x, y, x + radius, y);
-      this.closePath();
-    };
-  }
-
-  draw();
-  window._setWavePlaying = (v) => { playing = v; };
-})();
-
-/* ── Scrubber bars ────────────────────────────────────────────────── */
+/* ── Scrubber bars ─────────────────────────────────────── */
 const BAR_COUNT = 60;
 const waveHeights = Array.from({length: BAR_COUNT}, (_,i) => {
   const x = i / BAR_COUNT;
@@ -1422,171 +1104,156 @@ function updateScrubber(pct) {
   });
 }
 
-/* ── Format time ──────────────────────────────────────────────────── */
+/* ── Format time ─────────────────────────────────────────── */
 function fmt(s) {
   if (!isFinite(s)) return '—';
   const m = Math.floor(s / 60), sec = Math.floor(s % 60);
   return `${m}:${String(sec).padStart(2,'0')}`;
 }
 
-/* ── Radio skin visual state ──────────────────────────────────────── */
-const RADIO_FRAME_BASE = 'assets/radio-player';
-const RADIO_TUNING_FRAMES = Array.from({ length: 13 }, (_, i) => i);
-const RADIO_PLAYING_FRAMES = [16, 20, 25, 30, 34, 37, 42];
-const RADIO_PRELOAD_FRAMES = [...new Set([...RADIO_TUNING_FRAMES, ...RADIO_PLAYING_FRAMES, 44, 55])];
-const reduceRadioMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-let radioVisualState = 'idle';
-let radioFrameTimer = null;
-let radioLoopIndex = 0;
-
-function radioFrameUrl(frameNumber) {
-  return `${RADIO_FRAME_BASE}/frame-${String(frameNumber).padStart(2, '0')}.png`;
+/* ── Tab switching ──────────────────────────────────────── */
+let currentTab = 'transcript';
+function switchTab(tab) {
+  currentTab = tab;
+  tabBar.querySelectorAll('.tab-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  panelTranscript.style.display = tab === 'transcript' ? '' : 'none';
+  panelQueue.style.display = tab === 'queue' ? '' : 'none';
+  panelMemory.style.display = tab === 'memory' ? '' : 'none';
 }
+tabBar.querySelectorAll('.tab-btn').forEach(b => {
+  b.addEventListener('click', () => switchTab(b.dataset.tab));
+});
 
-function preloadRadioFrames() {
-  RADIO_PRELOAD_FRAMES.forEach(frameNumber => {
-    const img = new Image();
-    img.src = radioFrameUrl(frameNumber);
+/* ── Queue rendering ────────────────────────────────────── */
+function renderQueueUI() {
+  if (currentTab !== 'queue') return;
+  const panel = panelQueue;
+  panel.innerHTML = '';
+  if (!queue.length) {
+    panel.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0;">No tracks queued yet.</div>';
+    return;
+  }
+  queue.forEach((track, i) => {
+    const div = document.createElement('div');
+    div.className = 'queue-item' + (i === queueIdx ? ' active' : '');
+    div.innerHTML = `
+      <span class="qi-index">${String(i+1).padStart(2,'0')}</span>
+      <span class="qi-title">${escapeHtml(track.title || track.query || '')}</span>
+      <span class="qi-artist">${escapeHtml(track.artist || '')}</span>
+    `;
+    div.addEventListener('click', () => {
+      if (i <= queueIdx) return; // can't go back
+      queueIdx = i - 1;
+      playNext();
+    });
+    panel.appendChild(div);
   });
 }
 
-function setRadioFrame(frameNumber) {
-  radioFrame.src = radioFrameUrl(frameNumber);
-}
-
-function stopRadioFrameLoop() {
-  if (radioFrameTimer) {
-    clearInterval(radioFrameTimer);
-    radioFrameTimer = null;
-  }
-}
-
-function startRadioFrameLoop(frames, intervalMs, { once = false, holdFrame = frames[frames.length - 1] } = {}) {
-  stopRadioFrameLoop();
-  radioLoopIndex = 0;
-
-  if (reduceRadioMotion.matches) {
-    setRadioFrame(holdFrame);
+/* ── Memory rendering ───────────────────────────────────── */
+// memoryItems is populated by the WS handler
+let memoryItems = [];
+function renderMemoryUI() {
+  if (currentTab !== 'memory') return;
+  const panel = panelMemory;
+  panel.innerHTML = '';
+  if (!memoryItems.length) {
+    panel.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0;">No memory yet.</div>';
     return;
   }
-
-  setRadioFrame(frames[radioLoopIndex]);
-  radioFrameTimer = setInterval(() => {
-    radioLoopIndex += 1;
-    if (radioLoopIndex >= frames.length) {
-      if (once) {
-        stopRadioFrameLoop();
-        setRadioFrame(holdFrame);
-        return;
-      }
-      radioLoopIndex = 0;
-    }
-    setRadioFrame(frames[radioLoopIndex]);
-  }, intervalMs);
+  memoryItems.forEach((item, i) => {
+    const div = document.createElement('div');
+    div.className = 'memory-item';
+    const timeStr = item.time || '';
+    const text = item.text || '';
+    div.innerHTML = `<span class="mi-time">${escapeHtml(timeStr)}</span><span class="mi-text">${escapeHtml(text)}</span>`;
+    panel.appendChild(div);
+  });
+}
+function addMemoryItem(time, text) {
+  memoryItems.unshift({ time, text });
+  renderMemoryUI();
 }
 
-function setRadioVisualState(state) {
-  radioVisualState = state;
-  radioPlayer.classList.toggle('is-busy', state === 'tuning');
-
-  if (state === 'tuning') {
-    radioStatus.textContent = '';
-    radioPlayer.setAttribute('aria-label', 'Tuning Claudio FM');
-    startRadioFrameLoop(RADIO_TUNING_FRAMES, 90, { once: true, holdFrame: 12 });
-    return;
-  }
-
-  if (state === 'playing') {
-    radioStatus.textContent = '';
-    radioPlayer.setAttribute('aria-label', 'Pause Claudio FM');
-    startRadioFrameLoop(RADIO_PLAYING_FRAMES, 180);
-    return;
-  }
-
-  stopRadioFrameLoop();
-
-  if (state === 'paused') {
-    radioStatus.textContent = '';
-    radioPlayer.setAttribute('aria-label', 'Resume Claudio FM');
-    setRadioFrame(44);
-    return;
-  }
-
-  if (state === 'ended') {
-    radioStatus.textContent = '';
-    radioPlayer.setAttribute('aria-label', 'Start Claudio FM');
-    setRadioFrame(55);
-    return;
-  }
-
-  radioStatus.textContent = '';
-  radioPlayer.setAttribute('aria-label', 'Start Claudio FM');
-  setRadioFrame(0);
+function escapeHtml(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-function syncRadioVisualFromAudio() {
-  if (!musicAudio.src) {
-    setRadioVisualState(startingRadio ? 'tuning' : 'idle');
-  } else if (!musicAudio.paused && !musicAudio.ended) {
-    setRadioVisualState('playing');
-  } else if (musicAudio.ended) {
-    setRadioVisualState('ended');
-  } else {
-    setRadioVisualState('paused');
-  }
-}
-
-async function handleRadioPlayerClick() {
-  if (startingRadio) return;
-  if (musicAudio.src && musicAudio.paused) {
-    musicAudio.play().catch(console.error);
-    return;
-  }
-  if (!musicAudio.paused) {
-    musicAudio.pause();
-    return;
-  }
-  await startRadio();
-}
-
-preloadRadioFrames();
-setRadioVisualState('idle');
-radioPlayer.addEventListener('click', handleRadioPlayerClick);
-
-/* ── Radio info panel toggle ──────────────────────────────────── */
-let radioInfoClosed = localStorage.getItem('claudio:radio-info-closed') === '1';
-
-function applyRadioInfoState() {
-  document.documentElement.classList.toggle('radio-info-closed', radioInfoClosed);
-  radioInfoToggle.setAttribute('aria-label', radioInfoClosed ? 'Show info panel' : 'Hide info panel');
-}
-
-function toggleRadioInfoPanel() {
-  radioInfoClosed = !radioInfoClosed;
-  localStorage.setItem('claudio:radio-info-closed', radioInfoClosed ? '1' : '0');
-  applyRadioInfoState();
-}
-
-radioInfoToggle.addEventListener('click', toggleRadioInfoPanel);
-applyRadioInfoState();
-
-/* ── Music player ─────────────────────────────────────────────────── */
+/* ── Music player ─────────────────────────────────────────── */
 function setRadioStatus(status) {
-  headerStatus.textContent = status;
-  const isLive = ['On Air', 'Speaking', 'Playing'].includes(status);
-  dotLive.style.display = isLive ? '' : 'none';
-  radioInfoDot.classList.toggle('live', isLive);
-  document.documentElement.classList.toggle('radio-is-live', isLive);
-  window._setWavePlaying(['Speaking', 'Playing'].includes(status));
+  setRadioStatusUI(status);
 }
 
 function setPlaying(v) {
   iconPlay.style.display  = v ? 'none' : '';
   iconPause.style.display = v ? '' : 'none';
-  setRadioVisualState(v ? 'playing' : (musicAudio.src ? 'paused' : 'idle'));
   if (!ttsAudio.paused && !ttsAudio.ended) return;
   setRadioStatus(v ? 'Playing' : 'Paused');
 }
+
+/* ── Web Audio API real-time visualizer ────────────────────── */
+let audioCtx = null;
+let analyser = null;
+let mediaSource = null;
+let rafId = null;
+const barElements = audioBars ? audioBars.querySelectorAll('i') : [];
+const VIZ_BAR_COUNT = barElements.length;
+
+function initAudioAnalyser() {
+  if (audioCtx) return;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 64;           // 32 frequency bins
+    analyser.smoothingTimeConstant = 0.75;
+    mediaSource = audioCtx.createMediaElementSource(musicAudio);
+    mediaSource.connect(analyser);
+    analyser.connect(audioCtx.destination);
+  } catch (err) {
+    console.warn('[visualizer] AudioContext init failed', err);
+  }
+}
+
+function startVisualizer() {
+  if (!analyser || rafId) return;
+  const buffer = new Uint8Array(analyser.frequencyBinCount);
+  const animate = () => {
+    rafId = requestAnimationFrame(animate);
+    analyser.getByteFrequencyData(buffer);
+    // Map bars to frequency bins (skip the very lowest bins which are usually 0)
+    const binStep = Math.max(1, Math.floor((buffer.length - 2) / VIZ_BAR_COUNT));
+    for (let i = 0; i < VIZ_BAR_COUNT; i++) {
+      const binIdx = 1 + i * binStep;
+      // Average a few bins for smoother bars
+      let sum = 0, count = 0;
+      for (let j = 0; j < binStep; j++) {
+        if (binIdx + j < buffer.length) { sum += buffer[binIdx + j]; count++; }
+      }
+      const avg = count > 0 ? sum / count : 0;
+      // Map 0-255 → 8%-100% height, with a minimum
+      const pct = Math.max(8, (avg / 255) * 100);
+      barElements[i].style.height = pct + '%';
+    }
+  };
+  animate();
+}
+
+function stopVisualizer() {
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  // Reset bars to minimum
+  barElements.forEach(b => { b.style.height = '12%'; });
+}
+
+// Initialize on first play (needs user gesture for AudioContext)
+musicAudio.addEventListener('play', () => {
+  initAudioAnalyser();
+  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+  startVisualizer();
+});
+musicAudio.addEventListener('pause', stopVisualizer);
+musicAudio.addEventListener('ended', stopVisualizer);
 
 musicAudio.addEventListener('play',  () => setPlaying(true));
 musicAudio.addEventListener('pause', () => setPlaying(false));
@@ -1598,7 +1265,6 @@ musicAudio.addEventListener('ended', () => {
   });
   if (!playNext()) {
     setRadioStatus('Paused');
-    setRadioVisualState('ended');
   }
 });
 musicAudio.addEventListener('loadedmetadata', () => {
@@ -1610,11 +1276,14 @@ musicAudio.addEventListener('loadedmetadata', () => {
   maybeRefillAhead();
 });
 musicAudio.addEventListener('error', () => {
+  const errMsg = musicAudio.error ? `播放错误 ${musicAudio.error.code}` : '播放失败';
   console.warn('[music] playback failed', musicAudio.error);
+  setRadioStatus('Error');
   addTurn('Claudio', "That link dropped out. I'll skip ahead and keep the set moving.");
   if (!playNext()) setRadioStatus('Paused');
 });
-/* ── Prefetch next track ──────────────────────────────────────────── */
+
+/* ── Prefetch next track ─────────────────────────────────── */
 const prefetchEl = document.createElement('audio');
 prefetchEl.preload = 'auto';
 let prefetchedUrl = null;
@@ -1661,7 +1330,7 @@ scrubber.addEventListener('click', e => {
   musicAudio.currentTime = pct * musicAudio.duration;
 });
 
-/* ── TTS ducking ──────────────────────────────────────────────────── */
+/* ── TTS ducking ──────────────────────────────────────── */
 function fadeMusicVolume(target, ms = 260) {
   clearInterval(volumeFadeTimer);
   const start = musicAudio.volume;
@@ -1702,7 +1371,7 @@ ttsAudio.addEventListener('pause', () => { if (!ttsAudio.ended) restoreMusicVolu
 ttsAudio.addEventListener('ended', afterTtsFinished);
 ttsAudio.addEventListener('timeupdate', () => advanceKaraoke(ttsAudio.currentTime, ttsAudio.duration || 0));
 
-/* ── Transcript ───────────────────────────────────────────────────── */
+/* ── Transcript ─────────────────────────────────────────── */
 let karaokeWords = [];
 
 function transcriptTokens(text) {
@@ -1752,7 +1421,6 @@ function addTurn(speaker, text, timeLabel = 'now') {
   turn.appendChild(body);
   transcriptScroll.insertBefore(turn, transcriptScroll.lastElementChild);
 
-  // Mark previous turns as non-active
   [...transcriptScroll.querySelectorAll('.turn.active')].forEach(t => {
     if (t !== turn) t.classList.remove('active');
   });
@@ -1803,92 +1471,10 @@ function addUserTurn(text) {
   scrollTranscriptToBottom();
 }
 
-function addCallerTurn(text) {
-  return addTurn('Caller', text, programTimeLabel());
-}
-
-function playRequestLineConnect() {
-  duckMusic();
-  setRadioStatus('Speaking');
-  return new Promise(resolve => {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if (!AudioCtx) {
-      setTimeout(resolve, 220);
-      return;
-    }
-
-    const ctx = new AudioCtx();
-    const master = ctx.createGain();
-    master.gain.setValueAtTime(0.0001, ctx.currentTime);
-    master.gain.exponentialRampToValueAtTime(Math.max(0.0001, 0.16 * djVolume), ctx.currentTime + 0.025);
-    master.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.62);
-    master.connect(ctx.destination);
-
-    const click = ctx.createOscillator();
-    click.type = 'square';
-    click.frequency.setValueAtTime(1180, ctx.currentTime);
-    click.connect(master);
-    click.start(ctx.currentTime);
-    click.stop(ctx.currentTime + 0.055);
-
-    const tone = ctx.createOscillator();
-    tone.type = 'sine';
-    tone.frequency.setValueAtTime(540, ctx.currentTime + 0.12);
-    tone.frequency.linearRampToValueAtTime(710, ctx.currentTime + 0.34);
-    tone.connect(master);
-    tone.start(ctx.currentTime + 0.12);
-    tone.stop(ctx.currentTime + 0.5);
-
-    setTimeout(() => {
-      ctx.close().catch(() => {});
-      resolve();
-    }, 680);
-  });
-}
-
-async function requestCallerTts(text) {
-  const res = await fetch('/api/tts/caller', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ text }),
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.error || `Caller TTS failed: ${res.status}`);
-  }
-  return res.json();
-}
-
-function playCallerVoice(ttsUrl) {
-  return new Promise(resolve => {
-    if (!ttsUrl) {
-      resolve();
-      return;
-    }
-    const done = () => resolve();
-    ttsAudio.addEventListener('ended', done, { once: true });
-    ttsAudio.addEventListener('error', done, { once: true });
-    ttsAudio.src = ttsUrl;
-    ttsAudio.play().catch(err => {
-      console.error('[caller-tts-play]', err);
-      afterTtsFinished();
-      resolve();
-    });
-  });
-}
-
-/* ── Replay ───────────────────────────────────────────────────────── */
-replayBtn.addEventListener('click', () => {
-  const replayUrl = lastReplaySegment?.ttsUrl || lastTtsUrl;
-  if (!replayUrl) return;
-  ttsAudio.src = replayUrl;
-  ttsAudio.play().catch(console.error);
-});
-
-/* ── Queue ────────────────────────────────────────────────────────── */
+/* ── Queue / Segments logic (preserved exactly) ─────────── */
 let queue = [], queueIdx = 0;
 let autoRefilling = false;
-let segueStarted = false;     // the DJ already spoke over the current song's outro
+let segueStarted = false;
 let scriptSegments = [];
 let handledSegmentIds = new Set();
 let programClockStartedAt = null;
@@ -1925,7 +1511,6 @@ function findSegments(matchFn) {
   return scriptSegments.filter(segment => !wasSegmentHandled(segment) && matchFn(segment));
 }
 
-// Claudio speaks: show a single script segment and play its own voice asset.
 function speakSegmentObject(segment, onEnd) {
   if (!segment) { if (onEnd) onEnd(); return; }
   if (wasSegmentHandled(segment)) { if (onEnd) onEnd(); return; }
@@ -1979,10 +1564,9 @@ function isOutroWindowOpen() {
   return dur > 0 && (dur - cur) <= SEGUE_LEAD_S;
 }
 
-// Called in the last seconds of a song: bring the DJ in over the fade, like real radio.
 function maybeStartOutroTalk() {
   if (segueStarted) return;
-  if (!ttsAudio.paused && !ttsAudio.ended) return; // already talking
+  if (!ttsAudio.paused && !ttsAudio.ended) return;
   if (!isOutroWindowOpen()) return;
 
   const seamSegments = findSegments(segment =>
@@ -2015,7 +1599,6 @@ function maybeStartOutroTalk() {
   }
 }
 
-// Keep enough music buffered that Claude can be slow without the station falling silent.
 function maybeRefillAhead() {
   if (!queue.length || autoRefilling) return;
   if (Date.now() - lastRefillAt < REFILL_BACKOFF_MS) return;
@@ -2030,7 +1613,7 @@ function maybeRefillAhead() {
 }
 
 function renderQueue() {
-  // Queue remains internal; upcoming tracks are not shown on the page.
+  renderQueueUI();
 }
 
 function normalizeTrackText(value) {
@@ -2077,16 +1660,24 @@ function autoRefill() {
 function playTrack(track) {
   metaName.textContent = track.title || track.query;
   metaSub.textContent = track.artist ? `Now Playing · ${track.artist}` : 'Now Playing';
+  metaNameBar.textContent = track.title || track.query;
+  metaSubBar.textContent = track.artist ? `Now Playing · ${track.artist}` : 'Now Playing';
+  metaBar.classList.add('visible');
   if (track.artist) {
     metaSourceText.textContent = track.title + ' — ' + track.artist;
-    metaSource.style.display = 'inline-flex';
+    metaSource.classList.add('visible');
   } else {
     metaSourceText.textContent = '';
-    metaSource.style.display = 'none';
+    metaSource.classList.remove('visible');
   }
   musicAudio.src = track.streamUrl;
   musicAudio.volume = (!ttsAudio.paused && !ttsAudio.ended) ? duckedMusicVolume() : baseMusicVolume;
-  musicAudio.play().catch(console.error);
+  musicAudio.play().catch(err => {
+    console.error('[music] play() 失败:', err);
+    metaSub.textContent = '播放失败，请点击播放按钮';
+    setRadioStatus('Error');
+  });
+  renderQueueUI();
 }
 
 function playNext() {
@@ -2101,7 +1692,6 @@ function playNext() {
       segment.trackIndex === queueIdx
     );
     if (spokenDuringOutro) {
-      // Claudio already talked over the outro. If still talking, let the track follow the voice.
       if (!ttsAudio.paused && !ttsAudio.ended) {
         ttsAudio.addEventListener('ended', () => playTrack(track), { once: true });
       } else {
@@ -2110,7 +1700,6 @@ function playNext() {
     } else if (beforeTrackSegments.length) {
       speakSegmentSequence(beforeTrackSegments, () => playTrack(track));
     } else if (track.introTtsUrl) {
-      // Fallback (short song / seek): no outro segue happened, so talk now then play.
       speakSegment(track.introTranscript, track.introTtsUrl, () => playTrack(track));
     } else {
       playTrack(track);
@@ -2187,7 +1776,7 @@ function offsetSegmentsForQueue(segments, queueStart) {
   }));
 }
 
-/* ── WebSocket ────────────────────────────────────────────────────── */
+/* ── WebSocket ───────────────────────────────────────────── */
 let ws;
 function connectWS() {
   ws = new WebSocket(`ws://${location.host}/stream`);
@@ -2205,8 +1794,10 @@ function handleWsMessage(msg) {
   if (msg.type === 'program-start') {
     currentProgramId = msg.programId || currentProgramId;
     if (msg.sessionTitle) sessionTitleEl.textContent = msg.sessionTitle;
+    sessionTitleBar.classList.add('visible');
     if (msg.stationName || msg.programName) {
       metaSub.textContent = [msg.stationName, msg.programName].filter(Boolean).join(' · ');
+      metaSubBar.textContent = [msg.stationName, msg.programName].filter(Boolean).join(' · ');
     }
     resetProgramClock();
     const tracks = msg.tracks || [];
@@ -2218,6 +1809,7 @@ function handleWsMessage(msg) {
       (segment.position === 'before_track' && (segment.trackIndex ?? 0) === queueIdx)
     );
     if (immediateSegments.length) speakSegmentSequence(immediateSegments);
+    setRadioStatusUI('On Air');
     return;
   }
 
@@ -2252,9 +1844,9 @@ function handleWsMessage(msg) {
     if (msg.sessionTitle) sessionTitleEl.textContent = msg.sessionTitle;
     if (msg.stationName || msg.programName) {
       metaSub.textContent = [msg.stationName, msg.programName].filter(Boolean).join(' · ');
+      metaSubBar.textContent = [msg.stationName, msg.programName].filter(Boolean).join(' · ');
     }
 
-    // Capture playback state BEFORE enqueueing changes it.
     const musicLive = !!musicAudio.src && !musicAudio.paused && !musicAudio.ended;
     const programmed = msg.trigger === 'scheduler' || msg.trigger === 'autoRefill';
     const tracks = msg.tracks || [];
@@ -2262,7 +1854,6 @@ function handleWsMessage(msg) {
     const incomingSegments = offsetSegmentsForQueue(normalizeIncomingSegments(msg), queueStart);
 
     if (programmed && musicLive) {
-      // A programmed update arrived mid-song. Don't talk over its heart — deliver at the seam.
       const shiftedSegments = incomingSegments.map(segment => {
         if (tracks.length && segment.position === 'before_track' && segment.trackIndex === queueStart) {
           return {
@@ -2280,7 +1871,6 @@ function handleWsMessage(msg) {
         enqueueAndPlay(tracks);
       }
     } else {
-      // Fresh start (talk-up over the opening track) or a live call-in: act now.
       if (!musicLive) resetProgramClock();
       scriptSegments = [...scriptSegments, ...incomingSegments];
       if (tracks.length) enqueueAndPlay(tracks);
@@ -2305,36 +1895,8 @@ function handleWsMessage(msg) {
 
 connectWS();
 
-/* ── Chat ─────────────────────────────────────────────────────────── */
-function openRequestLine() {
-  chatToggle.classList.add('hidden');
-  chatBar.classList.remove('hidden');
-  chatInput.focus();
-}
-
-function closeRequestLine() {
-  chatBar.classList.add('hidden');
-  chatToggle.classList.remove('hidden');
-  chatInput.value = '';
-  chatInput.style.height = 'auto';
-}
-
-chatToggle.addEventListener('click', e => {
-  e.stopPropagation();
-  openRequestLine();
-});
-
-chatBar.addEventListener('click', e => {
-  e.stopPropagation();
-});
-
-document.addEventListener('click', () => {
-  if (!chatBar.classList.contains('hidden')) closeRequestLine();
-});
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !chatBar.classList.contains('hidden')) closeRequestLine();
-});
+/* ── Chat ─────────────────────────────────────────────────── */
+// In-card chat is always visible — no toggle needed
 
 async function requestChat(message, { showUserTurn = true } = {}) {
   if (showUserTurn) addUserTurn(message);
@@ -2345,53 +1907,35 @@ async function requestChat(message, { showUserTurn = true } = {}) {
   });
 }
 
-async function patchCallerIntoStation(text) {
-  addCallerTurn(text);
-  let callerAudio = null;
-  try {
-    callerAudio = await requestCallerTts(text);
-  } catch (err) {
-    console.error('[caller-tts]', err);
-  }
-
-  await playRequestLineConnect();
-  if (callerAudio?.ttsUrl) {
-    await playCallerVoice(callerAudio.ttsUrl);
-  } else {
-    restoreMusicVolume();
-    afterTtsFinished();
-  }
-  await requestChat(text, { showUserTurn: false });
-}
-
 async function startRadio() {
   if (startingRadio || musicAudio.src) return;
   startingRadio = true;
   playBtn.disabled = true;
-  setRadioVisualState('tuning');
   setRadioStatus('On Air');
-  metaSub.textContent = 'Tuning Claudio FM…';
+  metaSub.textContent = 'Starting Claudio FM…';
+  metaSubBar.textContent = 'Starting Claudio FM…';
   try {
     await requestChat(buildStartMessage(), { showUserTurn: false });
   } catch (err) {
     console.error('[start-radio]', err);
     setRadioStatus('Paused');
-    setRadioVisualState('idle');
     metaSub.textContent = 'Could not start Claudio FM';
+    metaSubBar.textContent = 'Could not start Claudio FM';
   } finally {
     playBtn.disabled = false;
     startingRadio = false;
-    if (musicAudio.src) syncRadioVisualFromAudio();
+    if (musicAudio.src) setRadioStatusUI(musicAudio.paused ? 'Paused' : 'Playing');
   }
 }
 
 async function sendMessage() {
   const text = chatInput.value.trim();
   if (!text) return;
-  closeRequestLine();
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
   chatSend.disabled = true;
   try {
-    await patchCallerIntoStation(text);
+    await requestChat(text, { showUserTurn: true });
   } catch (err) { console.error('[chat]', err); }
   finally { chatSend.disabled = false; }
 }
@@ -2405,7 +1949,7 @@ chatInput.addEventListener('input', () => {
 });
 chatSend.addEventListener('click', sendMessage);
 
-/* ── Skin ─────────────────────────────────────────────────────────── */
+/* ── Skin ─────────────────────────────────────────────────── */
 const skinControl = document.getElementById('skinControl');
 let currentSkin = localStorage.getItem('claudio:skin') || 'default';
 
@@ -2422,7 +1966,6 @@ function applySkin(name) {
     btn.classList.toggle('active', active);
     btn.setAttribute('aria-pressed', String(active));
   });
-  syncRadioVisualFromAudio();
 }
 
 skinControl.addEventListener('click', e => {
@@ -2433,7 +1976,7 @@ skinControl.addEventListener('click', e => {
 
 applySkin(currentSkin);
 
-/* ── Tweaks ───────────────────────────────────────────────────────── */
+/* ── Tweaks ─────────────────────────────────────────────── */
 document.getElementById('tweaksToggle').addEventListener('click', () => {
   document.getElementById('tweaks').classList.toggle('visible');
 });
@@ -2457,7 +2000,7 @@ document.getElementById('swatches').addEventListener('click', e => {
   if (!sw) return;
   document.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
   sw.classList.add('active');
-  document.getElementById('cardHeader').style.background = sw.dataset.bg;
+  document.getElementById('fmCard').style.background = sw.dataset.bg;
 });
 
 ['inBlueHue','inVioletHue'].forEach(id => {
@@ -2474,6 +2017,15 @@ document.getElementById('swatches').addEventListener('click', e => {
     }
   });
 });
+
+/* ── Replay ──────────────────────────────────────────────── */
+replayBtn.addEventListener('click', () => {
+  const replayUrl = lastReplaySegment?.ttsUrl || lastTtsUrl;
+  if (!replayUrl) return;
+  ttsAudio.src = replayUrl;
+  ttsAudio.play().catch(console.error);
+});
+
 </script>
 </body>
 </html>

@@ -12,7 +12,8 @@ function sharedContext({ includeTaste = true, includeDialog = true, recentPlayLi
   const routines = readFile(path.join(__dirname, 'user/routines.md'));
   const moodRules = readFile(path.join(__dirname, 'user/mood-rules.md'));
   const now = new Date();
-  const env = `当前时间：${now.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}`;
+  const tz = process.env.TZ || 'Europe/London';
+  const env = `当前时间：${now.toLocaleString('en-GB', { timeZone: tz })}`;
   const plays = recentPlays(recentPlayLimit);
   const historyText = plays.length
     ? plays.map(p => `- ${p.title}${p.artist ? ' — ' + p.artist : ''}`).join('\n')
@@ -192,4 +193,66 @@ function buildBridgePrompt({ programTitle = '', afterTrack, beforeTrack, afterTr
   ].filter(Boolean).join('\n\n');
 }
 
-module.exports = { buildPrompt, buildProgramStartPrompt, buildColdOpenForTracksPrompt, buildMusicRefillPrompt, buildBridgePrompt };
+function buildBatchPrompt(userInput, options = {}) {
+  const djLanguage = normalizeDjLanguage(options.djLanguage);
+  const langInstruction = djLanguageInstruction(djLanguage, 'all spoken text (cold open parts and intros)');
+  const coldOpenLen = coldOpenLengthInstruction(djLanguage);
+  const introLen = djLanguage === 'zh'
+    ? 'Each intro should be 1-2 sentences in Chinese, usually 30-60 characters.'
+    : 'Each intro should be 1-2 sentences in English, usually 15-35 words.';
+
+  return [
+    sharedContext(),
+    `# Radio task\nbatch_generation: Generate a complete radio content package in ONE response. This will be consumed gradually by the station — no further AI calls needed until the queue runs low.`,
+    `# User input / startup intent\n${userInput}`,
+    [
+      'Strictly output JSON only, with no extra text.',
+      langInstruction,
+      `The "title" should use the same language as the DJ narration. 2-4 words, evocative.`,
+      'Return a JSON object with this EXACT structure:',
+      '{',
+      '  "title": "program moment name",',
+      '  "queue": [',
+      '    {',
+      '      "query": "Song Title - Artist Name",',
+      '      "reason": "internal reason why this song fits (1 sentence)",',
+      '      "intro": "DJ segue text to introduce this song on air (1-2 sentences)"',
+      '    }',
+      '    // ... exactly 10 entries',
+      '  ],',
+      '  "coldOpens": [',
+      '    {',
+      '      "parts": [',
+      '        {"part": "anchor", "text": "Opening sentence that hooks the listener."},',
+      '        {"part": "heart", "text": "Sentence connecting to the mood or moment."},',
+      '        {"part": "turn", "text": "Sentence that pivots toward the music."},',
+      '        {"part": "image", "text": "Vivid image or concrete detail."},',
+      '        {"part": "invitation", "text": "Short sentence into the first track."}',
+      '      ]',
+      '    }',
+      '    // ... exactly 3 cold open variations',
+      '  ],',
+      '  "preferences": {',
+      '    "mood": "current mood descriptor",',
+      '    "energy": "low|low-medium|medium|medium-high|high",',
+      '    "themes": ["theme1", "theme2", "theme3"]',
+      '  },',
+      '  "reason": "internal reason"',
+      '}',
+      '',
+      'Rules:',
+      'The "queue" array MUST contain exactly 10 songs in "song title - artist" format.',
+      'Keep song titles and artist names in their original language for accurate music search.',
+      'Do not repeat any song from the recent play history. Do not include the same song twice.',
+      'Avoid artists that appear in the most recent 5 played songs unless the listener explicitly asked.',
+      coldOpenLen,
+      introLen,
+      'The first cold open (coldOpens[0]) is the primary opening; coldOpens[1] and coldOpens[2] are backup variations with different tones.',
+      'Each "intro" in the queue is what the DJ says to segue INTO that song (before it plays). The intro for queue[0] is not used (the cold open covers it).',
+      'Intros should reference the actual song title/artist where natural, like a real radio DJ would.',
+      'The cold open must feel like an on-air host opening a station, not an assistant explaining recommendations.',
+    ].join('\n'),
+  ].filter(Boolean).join('\n\n');
+}
+
+module.exports = { buildPrompt, buildProgramStartPrompt, buildColdOpenForTracksPrompt, buildMusicRefillPrompt, buildBridgePrompt, buildBatchPrompt };

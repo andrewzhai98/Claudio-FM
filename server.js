@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const { WebSocketServer } = require('ws');
@@ -11,6 +12,7 @@ const { callClaude } = require('./claude');
 const { synthesize } = require('./tts');
 const { getTrack } = require('./music');
 const { addPlay, addMessage, recentPlays, getPref } = require('./state');
+const { batchManager } = require('./batch');
 const scheduler = require('./scheduler');
 
 const app = express();
@@ -37,6 +39,18 @@ function broadcast(payload) {
 
 // ── Current playback state ───────────────────────────────────────────────────
 let nowPlaying = null;
+
+// 音频流代理：存储 trackId → 实际 streamUrl 的映射
+const streamProxyMap = new Map();
+function registerStreamProxy(tracks) {
+  for (const t of tracks) {
+    if (t.streamUrl && t.streamUrl.includes('googlevideo.com')) {
+      const id = Math.random().toString(36).slice(2, 10);
+      streamProxyMap.set(id, t.streamUrl);
+      t.streamUrl = `/api/stream/${id}`;
+    }
+  }
+}
 
 const STATION_NAME = 'Claudio FM';
 const PROGRAM_NAME = 'Evening Drive';
@@ -372,7 +386,7 @@ function normalizeTracksForPrompt(tracks = []) {
 async function resolveRequestedTracks(requestedTracks, options = {}) {
   const tracks = [];
   const failedTracks = [];
-  const avoidState = createTrackAvoidState(options.queue || []);
+  const avoidState = options.skipAvoid ? null : createTrackAvoidState(options.queue || []);
   for (let i = 0; i < requestedTracks.length; i++) {
     const query = requestedTracks[i];
     const track = await getTrack(query);
@@ -389,16 +403,18 @@ async function resolveRequestedTracks(requestedTracks, options = {}) {
         artist: track.artist || requested.artist || '',
         streamUrl: track.streamUrl,
       };
-      const skip = shouldSkipTrack(payloadTrack, avoidState);
-      if (skip.skip) {
-        failedTracks.push(`${query} (${skip.reason})`);
-        console.log(`[音乐] ↷ ${i + 1}/${requestedTracks.length} 跳过重复: ${payloadTrack.title}${payloadTrack.artist ? ' — ' + payloadTrack.artist : ''} | ${skip.reason}`);
-        continue;
+      if (avoidState) {
+        const skip = shouldSkipTrack(payloadTrack, avoidState);
+        if (skip.skip) {
+          failedTracks.push(`${query} (${skip.reason})`);
+          console.log(`[音乐] ↷ ${i + 1}/${requestedTracks.length} 跳过重复: ${payloadTrack.title}${payloadTrack.artist ? ' — ' + payloadTrack.artist : ''} | ${skip.reason}`);
+          continue;
+        }
+        avoidState.batchTrackKeys.add(trackIdentity(payloadTrack));
+        const urlIdentity = trackUrlIdentity(payloadTrack);
+        if (urlIdentity) avoidState.batchUrlKeys.add(urlIdentity);
       }
       tracks.push(payloadTrack);
-      avoidState.batchTrackKeys.add(trackIdentity(payloadTrack));
-      const urlIdentity = trackUrlIdentity(payloadTrack);
-      if (urlIdentity) avoidState.batchUrlKeys.add(urlIdentity);
       addPlay({ title: payloadTrack.title, artist: payloadTrack.artist, source_url: payloadTrack.streamUrl });
       console.log(`[音乐] ✓ ${i + 1}/${requestedTracks.length} 找到: ${payloadTrack.title}${payloadTrack.artist ? ' — ' + payloadTrack.artist : ''}`);
     } else {
@@ -406,6 +422,7 @@ async function resolveRequestedTracks(requestedTracks, options = {}) {
       console.log(`[音乐] ✗ ${i + 1}/${requestedTracks.length} 未找到: ${query}`);
     }
   }
+  registerStreamProxy(tracks);
   return { tracks, failedTracks };
 }
 
@@ -449,65 +466,116 @@ async function runJob(job) {
 }
 
 function enqueueBridgeJobs({ programId, sessionTitle, tracks, startIndex = 0, previousTrack = null, previousIndex = null, djLanguage = 'en' }) {
-  if (previousTrack && tracks.length) {
-    enqueueJob({
-      type: 'bridge_generation',
-      key: `bridge:${programId}:${previousIndex}:${startIndex}`,
-      programId,
-      sessionTitle,
-      afterTrack: previousTrack,
-      beforeTrack: tracks[0],
-      afterTrackIndex: previousIndex,
-      beforeTrackIndex: startIndex,
-      djLanguage: normalizeDjLanguage(djLanguage),
+  // DEPRECATED: Bridges are now pre-generated from batch intros.
+  // This function is kept as a no-op for backward compatibility.
+  console.log('[bridge] Skipped enqueueBridgeJobs (batch mode: bridges pre-generated)');
+}
+
+// ── Batch bridge segment creation ────────────────────────────────────────────
+// Creates bridge segments from pre-generated batch intros (0 AI calls).
+// batchStartIndex: the batch queue index of the first track in this slice
+// queueStartIndex: the front-end queue position of the first track in this slice
+// trackCount: number of tracks in this slice
+// hasPreviousTrack: whether there's a track before queueStartIndex (for the first bridge)
+function createBatchBridgeSegments(batchStartIndex, queueStartIndex, trackCount, hasPreviousTrack) {
+  const segments = [];
+  const startK = hasPreviousTrack ? 0 : 1;
+
+  for (let k = startK; k < trackCount; k++) {
+    const batchIdx = batchStartIndex + k;
+    const intro = batchManager.getIntro(batchIdx);
+    if (!intro) continue;
+
+    segments.push({
+      id: `batch_bridge_${batchIdx}`,
+      type: 'bridge',
+      groupId: `bridge_${queueStartIndex + k - 1}_${queueStartIndex + k}`,
+      position: 'between_tracks',
+      afterTrackIndex: queueStartIndex + k - 1,
+      beforeTrackIndex: queueStartIndex + k,
+      text: intro,
     });
   }
-  for (let i = 1; i < tracks.length; i++) {
-    enqueueJob({
-      type: 'bridge_generation',
-      key: `bridge:${programId}:${startIndex + i - 1}:${startIndex + i}`,
-      programId,
-      sessionTitle,
-      afterTrack: tracks[i - 1],
-      beforeTrack: tracks[i],
-      afterTrackIndex: startIndex + i - 1,
-      beforeTrackIndex: startIndex + i,
-      djLanguage: normalizeDjLanguage(djLanguage),
-    });
-  }
+
+  return segments;
 }
 
 async function runProgramStartJob(job) {
   const programId = makeProgramId();
-  const prompt = buildProgramStartPrompt(job.input || 'Open the station.', job.queueState || '', {
-    djLanguage: job.djLanguage,
-  });
-  const result = await callClaude(prompt);
-  const { tracks, failedTracks } = await resolveRequestedTracks(result.play || []);
-  let coldOpenSegments = (result.segments || []).filter(segment => segment?.type === 'cold_open');
-  let coldOpenReason = result.reason;
-  if (tracks.length) {
-    const coldOpenPrompt = buildColdOpenForTracksPrompt({
-      programTitle: result.title || '',
-      tracks,
-      userInput: job.input || 'Open the station.',
-      djLanguage: job.djLanguage,
-    });
-    const coldOpenScript = await callClaude(coldOpenPrompt);
-    coldOpenSegments = Array.isArray(coldOpenScript.segments) ? coldOpenScript.segments : coldOpenSegments;
-    coldOpenReason = coldOpenScript.reason || coldOpenReason;
-  }
-  const coldOpenResult = {
-    ...result,
-    segments: [
+
+  // ── ONE AI call: generate batch (10 songs + 3 cold opens + intros) ──
+  console.log('[电台] program_start: 生成 batch（1 次 AI 调用）...');
+  const batch = await batchManager.generateBatch(
+    job.input || 'Open the station.',
+    { djLanguage: job.djLanguage }
+  );
+
+  let tracks = [];
+  let failedTracks = [];
+  let segments = [];
+  let sessionTitle = '';
+  let reason = 'batch';
+
+  if (batch && batch.queue.length > 0) {
+    // Batch success: consume first 3 tracks
+    const batchStartIndex = batchManager.consumedIndex;
+    const queries = batchManager.nextTrackQueries(3);
+    console.log(`[电台] batch 消费 ${queries.length} 首: ${queries.join(', ')}`);
+    const result = await resolveRequestedTracks(queries);
+    tracks = result.tracks;
+    failedTracks = result.failedTracks;
+    sessionTitle = batch.title || '';
+
+    // Create cold open segments from batch.coldOpens[0]
+    const coldOpen = batchManager.getColdOpen(0);
+    const coldOpenSegments = [];
+    if (coldOpen) {
+      coldOpen.parts.forEach((part, i) => {
+        coldOpenSegments.push({
+          id: `${programId}_cold_${i}`,
+          type: 'cold_open',
+          groupId: 'open_0',
+          part: part.part,
+          position: 'before_track',
+          trackIndex: 0,
+          text: part.text,
+        });
+      });
+    }
+
+    // Create bridge segments from batch intros (0 AI calls!)
+    const bridgeSegments = createBatchBridgeSegments(batchStartIndex, 0, tracks.length, false);
+
+    // Combine: station ID + cold open + bridges
+    const allSegments = [
       programStartIdSegment(programId),
       ...coldOpenSegments,
-    ],
-  };
-  const segments = await synthesizeSegments(normalizeSegments(coldOpenResult, tracks, false, failedTracks));
+      ...bridgeSegments,
+    ];
+
+    segments = await synthesizeSegments(normalizeSegments({ segments: allSegments }, tracks, false, failedTracks));
+  } else {
+    // Batch failed: fallback to recent plays (no AI, no DJ content)
+    console.log('[电台] batch 生成失败，兜底：从最近播放记录中选取曲目');
+    const recent = recentPlays().reverse().slice(0, 20);
+    const fallbackQueries = [];
+    for (const entry of recent) {
+      if (fallbackQueries.length >= 3) break;
+      const q = entry.query || entry.title || '';
+      if (q && !fallbackQueries.includes(q)) fallbackQueries.push(q);
+    }
+    if (!fallbackQueries.length) {
+      fallbackQueries.push('Never Gonna Give You Up', 'Bohemian Rhapsody', 'Blinding Lights');
+    }
+    const result = await resolveRequestedTracks(fallbackQueries, { skipAvoid: true });
+    tracks = result.tracks;
+    failedTracks = result.failedTracks;
+    sessionTitle = 'Music Mode';
+    reason = 'fallback';
+  }
 
   stationState.programId = programId;
-  stationState.sessionTitle = result.title || '';
+  stationState.sessionTitle = sessionTitle;
   stationState.tracks = tracks;
   if (tracks.length) nowPlaying = { title: tracks[0].title, artist: tracks[0].artist, startedAt: Date.now() };
   addMessage('claudio', segments.filter(s => s.text).map(s => s.text).join('\n\n'));
@@ -517,35 +585,91 @@ async function runProgramStartJob(job) {
     programId,
     tracks,
     segments,
-    sessionTitle: result.title || '',
+    sessionTitle,
     stationName: STATION_NAME,
     programName: PROGRAM_NAME,
     failedTracks,
-    reason: coldOpenReason,
+    reason,
   };
   broadcast(payload);
 
-  enqueueBridgeJobs({ programId, sessionTitle: result.title || '', tracks, startIndex: 0, djLanguage: job.djLanguage });
+  // NO enqueueBridgeJobs — bridges are pre-generated in segments!
+  console.log(`[电台] program_start 完成: ${tracks.length} 首 | ${segments.length} 段播报 | reason=${reason}`);
   return payload;
 }
 
 async function runMusicRefillJob(job) {
   const programId = job.programId || stationState.programId || makeProgramId();
   const queue = normalizeTracksForPrompt(job.queue || stationState.tracks);
-  const prompt = buildMusicRefillPrompt({
-    programTitle: job.sessionTitle || stationState.sessionTitle,
-    currentTrack: job.currentTrack,
-    queue,
-    count: job.count || REFILL_TRACK_COUNT,
-  });
-  const result = await callClaude(prompt);
-  const { tracks, failedTracks } = await resolveRequestedTracks(result.play || [], { queue });
   const startIndex = Number.isInteger(job.queueLength) ? job.queueLength : stationState.tracks.length;
   const previousTrack = job.previousTrack || stationState.tracks[stationState.tracks.length - 1] || null;
   const previousIndex = Number.isInteger(job.previousIndex) ? job.previousIndex : startIndex - 1;
 
+  let tracks = [];
+  let failedTracks = [];
+  let reason = 'batch';
+
+  // ── Check if batch has remaining tracks (0 AI calls!) ──
+  if (batchManager.needsRefill(3)) {
+    // Batch exhausted: generate new batch (1 AI call for 10 songs)
+    console.log('[电台] music_refill: batch 余量不足，生成新 batch（1 次 AI 调用）...');
+    const refillContext = previousTrack
+      ? `Continue the station. Currently playing: ${trackLabel(previousTrack)}. Pick up where we left off with fresh tracks that flow naturally from the current vibe.`
+      : 'Continue the station with fresh tracks.';
+    const newBatch = await batchManager.generateBatch(refillContext, { djLanguage: job.djLanguage });
+
+    if (!newBatch) {
+      // Fallback: use recent plays (no AI)
+      console.log('[电台] music_refill: batch 生成失败，兜底选取曲目');
+      const recent = recentPlays().reverse().slice(0, 20);
+      const fallbackQueries = [];
+      for (const entry of recent) {
+        if (fallbackQueries.length >= 3) break;
+        const q = entry.query || entry.title || '';
+        if (q && !fallbackQueries.includes(q)) fallbackQueries.push(q);
+      }
+      if (!fallbackQueries.length) {
+        fallbackQueries.push('Never Gonna Give You Up', 'Bohemian Rhapsody', 'Blinding Lights');
+      }
+      const result = await resolveRequestedTracks(fallbackQueries, { queue, skipAvoid: true });
+      tracks = result.tracks;
+      failedTracks = result.failedTracks;
+      reason = 'fallback';
+    }
+  }
+
+  // Consume tracks from batch (if not already set by fallback)
+  if (!tracks.length && !failedTracks.length) {
+    const batchStartIndex = batchManager.consumedIndex;
+    const queries = batchManager.nextTrackQueries(3);
+    console.log(`[电台] music_refill: batch 消费 ${queries.length} 首: ${queries.join(', ')}`);
+    const result = await resolveRequestedTracks(queries, { queue });
+    tracks = result.tracks;
+    failedTracks = result.failedTracks;
+
+    // Create bridge segments from batch intros (0 AI calls!)
+    const bridgeSegments = createBatchBridgeSegments(batchStartIndex, startIndex, tracks.length, !!previousTrack);
+
+    // Synthesize TTS for bridge segments
+    if (bridgeSegments.length) {
+      const segments = await synthesizeSegments(normalizeSegments(
+        { segments: bridgeSegments },
+        new Array(Math.max(startIndex + tracks.length, 1)).fill(null),
+        false,
+        []
+      ));
+      // Broadcast bridge segments (same format as old segment-ready)
+      broadcast({
+        type: 'segment-ready',
+        programId,
+        segments,
+      });
+      if (segments.some(s => s.text)) addMessage('claudio', segments.filter(s => s.text).map(s => s.text).join('\n\n'));
+    }
+  }
+
   stationState.programId = programId;
-  stationState.sessionTitle = job.sessionTitle || stationState.sessionTitle || result.title || '';
+  stationState.sessionTitle = job.sessionTitle || stationState.sessionTitle || batchManager.getTitle() || '';
   stationState.tracks = [...stationState.tracks, ...tracks];
 
   const payload = {
@@ -554,10 +678,12 @@ async function runMusicRefillJob(job) {
     tracks,
     startIndex,
     failedTracks,
-    reason: result.reason,
+    reason,
   };
   broadcast(payload);
-  enqueueBridgeJobs({ programId, sessionTitle: stationState.sessionTitle, tracks, startIndex, previousTrack, previousIndex, djLanguage: job.djLanguage });
+
+  // NO enqueueBridgeJobs — bridges are pre-generated from batch intros!
+  console.log(`[电台] music_refill 完成: +${tracks.length} 首 | reason=${reason}`);
   return payload;
 }
 
@@ -607,26 +733,111 @@ async function runRadioSegment(userInput, intent = {}, skipHistory = false) {
   console.log(`[电台] 输入: "${userInput.slice(0, 80)}${userInput.length > 80 ? '…' : ''}"`);
 
   if (!skipHistory) addMessage('user', userInput);
-  const prompt = buildPrompt(userInput, nowPlaying ? JSON.stringify(nowPlaying) : '', {
-    mode: intent.mode,
-    djLanguage: intent.djLanguage,
-  });
   const speechOnly = intent.mode === 'speech-only';
-  const result = await callClaude(prompt);
 
-  console.log(`[电台] Claude 回复 → 节目「${result.title || '无标题'}」| 请求曲目 ${result.play?.length || 0} 首`);
-  if (result.segments?.length) console.log(`[电台] 脚本段落: ${result.segments.length}`);
-  if (result.say) console.log(`[电台] 兼容旁白: "${result.say.slice(0, 100)}${result.say.length > 100 ? '…' : ''}"`);
+  // ── Speech-only mode: keep existing flow (1 AI call with Groq fallback) ──
+  if (speechOnly) {
+    const prompt = buildPrompt(userInput, nowPlaying ? JSON.stringify(nowPlaying) : '', {
+      mode: intent.mode,
+      djLanguage: intent.djLanguage,
+    });
+    const result = await callClaude(prompt);
 
-  const requestedTracks = speechOnly ? [] : (result.play || []);
-  const { tracks, failedTracks } = await resolveRequestedTracks(requestedTracks);
+    console.log(`[电台] speech-only 回复 → "${(result.say || '').slice(0, 80)}"`);
+    const isQuotaExceeded = result.reason === 'quota_exceeded';
+    const segments = isQuotaExceeded ? [] : await synthesizeSegments(normalizeSegments(result, [], true, []));
+    const firstPlayableSegment = segments.find(s => s.ttsUrl && s.text && s.type !== 'silence');
+    const announcement = isQuotaExceeded ? '' : buildAnnouncement({ ...result, segments }, [], [], true);
+    if (!isQuotaExceeded) addMessage('claudio', announcement || result.say || '');
+    const ttsUrl = firstPlayableSegment?.ttsUrl || null;
 
-  const segments = await synthesizeSegments(normalizeSegments(result, tracks, speechOnly, failedTracks));
-  applyLegacyTrackIntrosFromSegments(tracks, segments);
+    const payload = {
+      type: 'now-playing',
+      ttsUrl,
+      tracks: [],
+      segments,
+      sessionTitle: isQuotaExceeded ? '' : (result.title || ''),
+      transcript: announcement,
+      djNote: result.say,
+      reason: result.reason,
+      mode: 'speech-only',
+      status: 'speaking',
+      stationName: STATION_NAME,
+      programName: PROGRAM_NAME,
+      trigger: intent.source || 'user',
+      failedTracks: [],
+    };
+    broadcast(payload);
+    console.log(`[电台] ── speech-only 广播完成 ──\n`);
+    return payload;
+  }
+
+  // ── Music mode: use batch system (1 AI call for 10 songs + scripts) ──
+  console.log('[电台] music mode: 生成 batch（1 次 AI 调用）...');
+  const batch = await batchManager.generateBatch(userInput, { djLanguage: intent.djLanguage });
+
+  let tracks = [];
+  let failedTracks = [];
+  let segments = [];
+  let sessionTitle = '';
+  let reason = 'batch';
+
+  if (batch && batch.queue.length > 0) {
+    const batchStartIndex = batchManager.consumedIndex;
+    const queries = batchManager.nextTrackQueries(3);
+    console.log(`[电台] batch 消费 ${queries.length} 首: ${queries.join(', ')}`);
+    const result = await resolveRequestedTracks(queries);
+    tracks = result.tracks;
+    failedTracks = result.failedTracks;
+    sessionTitle = batch.title || '';
+
+    // Create cold open segments (relative indices — front-end will offset)
+    const coldOpen = batchManager.getColdOpen(0);
+    const coldOpenSegments = [];
+    if (coldOpen) {
+      coldOpen.parts.forEach((part, i) => {
+        coldOpenSegments.push({
+          id: `seg_cold_${Date.now()}_${i}`,
+          type: 'cold_open',
+          groupId: 'open_0',
+          part: part.part,
+          position: 'before_track',
+          trackIndex: 0,
+          text: part.text,
+        });
+      });
+    }
+
+    // Create bridge segments (relative indices)
+    const bridgeSegments = createBatchBridgeSegments(batchStartIndex, 0, tracks.length, false);
+
+    const allSegments = [...coldOpenSegments, ...bridgeSegments];
+    segments = await synthesizeSegments(normalizeSegments({ segments: allSegments }, tracks, false, failedTracks));
+    applyLegacyTrackIntrosFromSegments(tracks, segments);
+  } else {
+    // Fallback: use recent plays (no AI, no DJ content)
+    console.log('[电台] batch 生成失败，兜底选取曲目');
+    const recent = recentPlays().reverse().slice(0, 20);
+    const fallbackQueries = [];
+    for (const entry of recent) {
+      if (fallbackQueries.length >= 3) break;
+      const q = entry.query || entry.title || '';
+      if (q && !fallbackQueries.includes(q)) fallbackQueries.push(q);
+    }
+    if (!fallbackQueries.length) {
+      fallbackQueries.push('Never Gonna Give You Up', 'Bohemian Rhapsody', 'Blinding Lights');
+    }
+    const result = await resolveRequestedTracks(fallbackQueries, { skipAvoid: true });
+    tracks = result.tracks;
+    failedTracks = result.failedTracks;
+    sessionTitle = 'Music Mode';
+    reason = 'fallback';
+  }
+
   const firstPlayableSegment = segments.find(s => s.ttsUrl && s.text && s.type !== 'silence');
-  const announcement = buildAnnouncement({ ...result, segments }, tracks, failedTracks, speechOnly);
-  const spokenSummary = segments.filter(s => s.text).map(s => s.text).join('\n\n');
-  addMessage('claudio', spokenSummary || announcement || result.say || '');
+  const announcement = reason === 'fallback' ? '' : buildAnnouncement({ segments }, tracks, failedTracks, false);
+  const spokenSummary = reason === 'fallback' ? '' : segments.filter(s => s.text).map(s => s.text).join('\n\n');
+  if (reason !== 'fallback') addMessage('claudio', spokenSummary || announcement || '');
   const ttsUrl = firstPlayableSegment?.ttsUrl || null;
 
   if (tracks.length) {
@@ -638,12 +849,12 @@ async function runRadioSegment(userInput, intent = {}, skipHistory = false) {
     ttsUrl,
     tracks,
     segments,
-    sessionTitle: result.title || '',
+    sessionTitle,
     transcript: announcement,
-    djNote: result.say,
-    reason: result.reason,
-    mode: speechOnly ? 'speech-only' : 'music',
-    status: speechOnly ? 'speaking' : (tracks.length ? 'queued' : 'speaking'),
+    djNote: '',
+    reason,
+    mode: 'music',
+    status: tracks.length ? 'queued' : 'speaking',
     stationName: STATION_NAME,
     programName: PROGRAM_NAME,
     trigger: intent.source || 'user',
@@ -651,7 +862,7 @@ async function runRadioSegment(userInput, intent = {}, skipHistory = false) {
   };
 
   broadcast(payload);
-  console.log(`[电台] ── 广播完成 ── 入队 ${tracks.length} 首 | 失败 ${failedTracks.length} 首\n`);
+  console.log(`[电台] ── 广播完成 ── 入队 ${tracks.length} 首 | 失败 ${failedTracks.length} 首 | reason=${reason}\n`);
   return payload;
 }
 
@@ -778,6 +989,53 @@ app.get('/api/tts/:filename', (req, res) => {
   const file = path.join(__dirname, 'cache/tts', req.params.filename);
   if (!fs.existsSync(file)) return res.status(404).end();
   res.sendFile(file);
+});
+
+// Serve cached music files
+app.get('/api/music/cache/:filename', (req, res) => {
+  const file = path.join(__dirname, 'cache/music', req.params.filename);
+  if (!fs.existsSync(file)) return res.status(404).end();
+  res.setHeader('Content-Type', 'audio/mpeg');
+  res.sendFile(file);
+});
+
+// 音频流代理：绕过浏览器 CORS/格式限制
+app.get('/api/stream/:id', async (req, res) => {
+  const streamUrl = streamProxyMap.get(req.params.id);
+  if (!streamUrl) return res.status(404).end();
+  try {
+    const proto = streamUrl.startsWith('https') ? https : http;
+    // 转发浏览器发来的 Range 等请求头
+    const headers = {
+      'User-Agent': req.headers['user-agent'] || 'Mozilla/5.0',
+      'Accept': '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
+      'Referer': 'https://www.youtube.com/',
+    };
+    if (req.headers.range) headers['Range'] = req.headers.range;
+    if (req.headers['accept-encoding']) headers['Accept-Encoding'] = req.headers['accept-encoding'];
+
+    const r = await new Promise((resolve, reject) => {
+      const opts = new URL(streamUrl);
+      const req2 = proto.get(streamUrl, { headers }, resolve);
+      req2.on('error', reject);
+      req2.setTimeout(15000, () => { req2.destroy(); reject(new Error('timeout')); });
+    });
+    // 转发状态码和响应头
+    res.status(r.statusCode);
+    for (const [k, v] of Object.entries(r.headers)) {
+      const key = k.toLowerCase();
+      if (key === 'transfer-encoding') continue;
+      if (key === 'content-length' && req.headers.range) continue; // Range 请求时 Node 会自动算
+      res.setHeader(k, v);
+    }
+    if (!res.getHeader('Content-Type')) res.setHeader('Content-Type', 'audio/webm');
+    if (!res.getHeader('Cache-Control')) res.setHeader('Cache-Control', 'no-cache');
+    r.pipe(res);
+  } catch (err) {
+    console.error('[proxy]', err.message);
+    res.status(502).end();
+  }
 });
 
 // ── Boot ─────────────────────────────────────────────────────────────────────

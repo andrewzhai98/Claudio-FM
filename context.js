@@ -47,14 +47,14 @@ function djLanguageInstruction(language, scope = 'spoken segment text') {
 
 function coldOpenLengthInstruction(language) {
   return normalizeDjLanguage(language) === 'zh'
-    ? 'The full cold open should use concrete musical detail and connect to the current moment, usually 120-220 Chinese characters across all cold_open parts.'
-    : 'The full cold open should use concrete musical detail and connect to the current moment, usually 80-140 English words across all cold_open parts.';
+    ? 'Cold open 要简洁自然，像真实电台 DJ。每段 30-60 字，总共 3-5 段。避免冗长介绍，直接带入音乐。'
+    : 'Cold open should be concise and natural, like a real radio DJ. Each part 20-40 words, total 3-5 parts. Avoid long introductions, lead directly into the music.';
 }
 
 function bridgeLengthInstruction(language) {
   return normalizeDjLanguage(language) === 'zh'
-    ? 'Bridge segments should be tighter than cold opens, usually 40-90 Chinese characters total. Silence segments are valid deliberate choices.'
-    : 'Bridge segments should be tighter than cold opens, usually 25-60 English words total. Silence segments are valid deliberate choices.';
+    ? 'Bridge 要简短有节奏感，20-40 字。可以是一句评价、一个过渡、或者干脆 silence。记住：音乐才是主角，你的话是点缀。'
+    : 'Bridge should be short and rhythmic, 15-25 words. Can be a quick comment, a transition, or silence. Remember: music is the star, your voice is the seasoning.';
 }
 
 function buildPrompt(userInput, queueState = '', options = {}) {

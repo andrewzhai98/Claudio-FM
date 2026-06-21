@@ -9,6 +9,47 @@ fs.mkdirSync(CACHE_DIR, { recursive: true });
 
 const VOLCENGINE_DEFAULT_ENDPOINT = 'https://openspeech.bytedance.com/api/v3/tts/unidirectional';
 
+// ── Text splitting for long TTS ─────────────────────────────────────────────
+const MAX_TTS_CHARS = 150;  // Maximum characters per TTS request (to avoid truncation)
+
+function splitTextForTts(text, maxChars = MAX_TTS_CHARS) {
+  if (!text || text.length <= maxChars) return [text];
+  
+  const chunks = [];
+  let current = '';
+  
+  // Split by sentences first
+  const sentences = text.match(/[^.!?。！？]+[.!?。！？"'’”)\]]*/g) || [text];
+  
+  for (const sentence of sentences) {
+    if ((current + sentence).length <= maxChars) {
+      current += sentence;
+    } else {
+      if (current) chunks.push(current.trim());
+      // If single sentence is too long, force split by commas or length
+      if (sentence.length > maxChars) {
+        const subChunks = sentence.split(/[，,、；;]\s*/);
+        let subCurrent = '';
+        for (const sub of subChunks) {
+          if ((subCurrent + sub).length <= maxChars) {
+            subCurrent += (subCurrent ? '，' : '') + sub;
+          } else {
+            if (subCurrent) chunks.push(subCurrent.trim());
+            subCurrent = sub.length <= maxChars ? sub : sub.slice(0, maxChars);
+          }
+        }
+        if (subCurrent) chunks.push(subCurrent.trim());
+        current = '';
+      } else {
+        current = sentence;
+      }
+    }
+  }
+  if (current) chunks.push(current.trim());
+  
+  return chunks.filter(Boolean);
+}
+
 function md5(text) {
   return crypto.createHash('md5').update(text).digest('hex');
 }

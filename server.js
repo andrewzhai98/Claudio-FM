@@ -58,6 +58,7 @@ const REFILL_TRACK_COUNT = 3;
 const PROGRAM_START_ID_TEXT = 'This is Claudio.';
 const TRACK_REPEAT_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 const ARTIST_RECENT_WINDOW = 5;
+const MAX_TTS_TEXT_LENGTH = 200;  // 防止 TTS 截断的最大文本长度（中文字符）
 
 const stationState = {
   programId: null,
@@ -232,6 +233,13 @@ async function synthesizeSegments(segments) {
       segment.status = 'silent';
       continue;
     }
+    
+    // 检查文本长度，防止 TTS 截断
+    if (segment.text.length > MAX_TTS_TEXT_LENGTH) {
+      console.warn(`[TTS] 文本过长 (${segment.text.length} 字)，截断到 ${MAX_TTS_TEXT_LENGTH} 字: "${segment.text.slice(0, 50)}..."`);
+      segment.text = segment.text.slice(0, MAX_TTS_TEXT_LENGTH) + '…';
+    }
+    
     try {
       console.log(`[TTS] 合成 ${segment.type} (${segment.text.length} 字): "${segment.text.slice(0, 50)}…"`);
       const f = await synthesize(segment.text);

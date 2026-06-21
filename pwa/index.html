@@ -252,6 +252,11 @@ html, body {
 }
 .play-btn:hover { transform: scale(1.06); background: rgba(255,255,255,0.2); }
 .play-btn:active { transform: scale(.95); }
+.play-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+#prevBtn, #nextBtn {
+  width: 32px;
+  height: 32px;
+}
 
 /* ── Scrubber (green progress bar, v4 style) ── */
 .scrubber {
@@ -792,6 +797,12 @@ html, body {
         <div class="now-playing-artist" id="metaSub">Waiting for Claudio…</div>
       </div>
       <div class="player-time-display" id="playerTime">0:00</div>
+      <button class="play-btn" id="prevBtn" aria-label="Previous track" title="Previous track" style="margin-right:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M9 2 L3 7 L9 12 Z" fill="currentColor"/>
+          <rect x="2" y="2" width="1.5" height="10" fill="currentColor"/>
+        </svg>
+      </button>
       <button class="play-btn" id="playBtn" aria-label="Play / pause">
         <svg id="iconPause" width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:none">
           <rect x="3" y="2" width="2.5" height="10" rx="0.8" fill="currentColor"/>
@@ -799,6 +810,12 @@ html, body {
         </svg>
         <svg id="iconPlay" width="14" height="14" viewBox="0 0 14 14" fill="none">
           <path d="M3.5 2.2 L11.5 7 L3.5 11.8 Z" fill="currentColor"/>
+        </svg>
+      </button>
+      <button class="play-btn" id="nextBtn" aria-label="Next track" title="Next track" style="margin-left:4px">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M5 2 L11 7 L5 12 Z" fill="currentColor"/>
+          <rect x="10.5" y="2" width="1.5" height="10" fill="currentColor"/>
         </svg>
       </button>
     </div>
@@ -877,6 +894,14 @@ html, body {
       <div class="queue-section" id="queueSection">
         <div class="queue-section-title">Up Next</div>
         <div id="queueListInner"></div>
+      </div>
+
+      <!-- Queue panel (full panel for tab switching) -->
+      <div class="queue-list" id="panelQueue" style="display:none">
+      </div>
+
+      <!-- Memory panel -->
+      <div class="memory-list" id="panelMemory" style="display:none">
       </div>
 
     </div><!-- .card-body -->
@@ -1277,7 +1302,7 @@ function renderQueueUI() {
         <span class="qi-artist">${escapeHtml(track.artist || '')}</span>
       `;
       div.addEventListener('click', () => {
-        if (i <= queueIdx) return;
+        if (i === queueIdx) return; // Already playing this track
         queueIdx = i - 1;
         playNext();
       });
@@ -1301,7 +1326,7 @@ function renderQueueUI() {
       <span class="qi-artist">${escapeHtml(track.artist || '')}</span>
     `;
     div.addEventListener('click', () => {
-      if (i <= queueIdx) return;
+      if (i === queueIdx) return; // Already playing this track
       queueIdx = i - 1;
       playNext();
     });
@@ -1579,6 +1604,24 @@ playBtn.addEventListener('click', async () => {
     return;
   }
   await startRadio();
+});
+
+// Previous track button
+document.getElementById('prevBtn').addEventListener('click', () => {
+  if (queueIdx > 0) {
+    queueIdx--;
+    segueStarted = false;
+    playTrack(queue[queueIdx]);
+    renderQueueUI();
+  }
+});
+
+// Next track button
+document.getElementById('nextBtn').addEventListener('click', () => {
+  if (!playNext()) {
+    // If no next track, try to start radio
+    if (!musicAudio.src) startRadio();
+  }
 });
 
 scrubber.addEventListener('click', e => {
@@ -2098,6 +2141,21 @@ function handleWsMessage(msg) {
     return;
   }
 
+  // Handle chat response from AI
+  if (msg.type === 'chat-response' || msg.type === 'chat') {
+    if (msg.text || msg.transcript) {
+      const text = msg.text || msg.transcript || '';
+      const ttsUrl = msg.ttsUrl || msg.audioUrl || null;
+      // Add AI response to transcript
+      addTurn('Claudio', text, 'now');
+      // If there's TTS audio, play it
+      if (ttsUrl) {
+        speakSegment(text, ttsUrl);
+      }
+    }
+    return;
+  }
+
   if (msg.type === 'now-playing') {
     if (msg.sessionTitle) sessionTitleEl.textContent = msg.sessionTitle;
     if (msg.stationName || msg.programName) {
@@ -2158,11 +2216,17 @@ connectWS();
 
 async function requestChat(message, { showUserTurn = true } = {}) {
   if (showUserTurn) addUserTurn(message);
-  await fetch('/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ message, djLanguage }),
-  });
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message, djLanguage }),
+    });
+    // The server will send the AI response via WebSocket
+    // No need to handle HTTP response here
+  } catch (err) {
+    console.error('[chat]', err);
+  }
 }
 
 async function startRadio() {

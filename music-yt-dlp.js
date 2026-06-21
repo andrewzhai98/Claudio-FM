@@ -15,7 +15,7 @@ if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 function cleanCache() {
   try {
     const files = fs.readdirSync(CACHE_DIR)
-      .filter(f => f.endsWith('.mp3'))
+      .filter(f => f.endsWith('.mp3') || f.endsWith('.part'))
       .map(f => {
         const p = path.join(CACHE_DIR, f);
         return { name: f, path: p, mtime: fs.statSync(p).mtimeMs };

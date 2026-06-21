@@ -4,6 +4,7 @@ node_modules/
 cache/tts/*
 cache/music/*.mp3
 cache/music/*.webm*
+cache/music/*.webm*
 docs/
 *.sqlite
 *.db

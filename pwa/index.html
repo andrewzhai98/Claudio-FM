@@ -179,11 +179,12 @@ html, body {
   min-height: 120px;
 }
 .hero-time {
-  font-size: clamp(48px, 11vw, 96px);
-  font-weight: 400; letter-spacing: .04em;
+  font-size: clamp(52px, 12vw, 104px);
+  font-weight: 200; letter-spacing: .10em;
   color: rgba(255,255,255,0.95);
-  line-height: .88;
+  line-height: .85;
   font-variant-numeric: tabular-nums;
+  font-stretch: expanded;
 }
 .hero-date {
   margin-top: 10px;
@@ -252,24 +253,119 @@ html, body {
 .play-btn:hover { transform: scale(1.06); background: rgba(255,255,255,0.2); }
 .play-btn:active { transform: scale(.95); }
 
-/* ── Scrubber (progress bar) ──────────────────────────────── */
+/* ── Scrubber (green progress bar, v4 style) ── */
 .scrubber {
-  flex: 1 1 auto; height: 28px;
-  display: flex; align-items: center; gap: 2px;
-  cursor: pointer; position: relative; touch-action: none;
-  margin: 0 24px;
-  border-bottom: 1px solid rgba(255,255,255,0.04);
   flex: 0 0 auto;
-}
-.scrubber .player-bar {
-  flex: 1 1 auto;
-  background: rgba(255,255,255,0.15); border-radius: 999px;
-  transition: background .12s; pointer-events: none;
+  margin: 4px 22px;
   height: 3px;
+  background: rgba(255,255,255,.08);
+  border-radius: 2px;
+  position: relative;
+  cursor: pointer;
 }
-.scrubber .player-bar.played { background: rgba(255,255,255,0.8); }
+.scrubber-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+  border-radius: 2px;
+  transition: width .1s linear;
+}
+.scrubber-thumb {
+  position: absolute;
+  top: 50%; left: 0%;
+  transform: translate(-50%,-50%);
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 6px rgba(74,222,128,.5);
+  opacity: 0;
+  transition: opacity .2s;
+}
+.scrubber:hover .scrubber-thumb { opacity:1; }
 
-/* ── Tab bar ─────────────────────────────────────────────────── */
+/* ── Status bar (above visualizer) ─────────────────── */
+.status-bar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 24px;
+  font-size: 9px;
+  color: #555;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.status-left { display:flex; align-items:center; gap:6px; }
+.status-dot {
+  width: 6px;height: 6px;border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* ── Frequency Visualizer ─────────────────────────────── */
+.freq-section {
+  flex: 0 0 auto;
+  padding: 2px 18px 6px;
+}
+.freq-label {
+  font-size: 8px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #444;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.freq-live {
+  display: flex;align-items:center;gap:4px;
+  font-size: 7px;color:#22c55e;letter-spacing:1px;
+}
+.freq-live-dot {
+  width:4px;height:4px;border-radius:50%;background:#22c55e;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+#freqBars {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 52px;
+  padding: 0 2px;
+}
+#freqBars i {
+  flex: 1;
+  min-width: 1px;
+  max-width: 100%;
+  height: 4px;
+  border-radius: 1px;
+  transition: height 0.06s ease-out;
+  position: relative;
+}
+
+/* ── Card body (scrollable, wraps transcript + queue) ─── */
+.card-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.card-body::-webkit-scrollbar { width:3px; }
+.card-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:2px; }
+
+/* ── Queue section (below transcript) ─────────────────── */
+.queue-section {
+  padding: 4px 24px 10px;
+  flex-shrink: 0;
+}
+.queue-section-title {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #444;
+  margin-bottom: 6px;
+}
 .tab-bar {
   flex: 0 0 auto;
   display: flex; gap: 6px;
@@ -508,6 +604,16 @@ html, body {
   font: 600 12px/1 Inter, sans-serif; cursor: pointer;
   transition: background .15s, color .15s;
 }
+#btnAutoColor {
+  height: 30px; border: 1px solid rgba(255,255,255,.15);
+  border-radius: 999px; background: transparent;
+  color: rgba(255,255,255,.58); font: 600 12px/1 Inter, sans-serif;
+  cursor: pointer; transition: background .15s, color .15s;
+  padding: 0 14px;
+}
+#btnAutoColor.active {
+  background: rgba(255,255,255,.92); color: rgb(17,17,17);
+}
 .segmented button.active {
   background: rgba(255,255,255,.92); color: rgb(17,17,17);
 }
@@ -679,11 +785,8 @@ html, body {
       </div>
     </div>
 
-    <!-- ═ Player section (audio bars + track info + play btn) -->
+    <!-- ═ Player section (track info + play btn) -->
     <div class="player-section">
-      <div class="audio-bars paused" id="audioBars">
-        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-      </div>
       <div class="now-playing">
         <div class="now-playing-title" id="metaName">Your private radio station</div>
         <div class="now-playing-artist" id="metaSub">Waiting for Claudio…</div>
@@ -700,9 +803,25 @@ html, body {
       </button>
     </div>
 
-    <!-- Scrubber -->
+    <!-- ═ Status bar + Frequency visualizer -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span class="status-dot"></span>
+        <span>FREQUENCY</span>
+      </div>
+    </div>
+    <div class="freq-section">
+      <div class="freq-label">
+        <span></span>
+        <span class="freq-live"><span class="freq-live-dot"></span>LIVE</span>
+      </div>
+      <div id="freqBars"></div>
+    </div>
+
+    <!-- Scrubber (green, v4 style) -->
     <div class="scrubber" id="scrubber">
-      <!-- bars filled by JS -->
+      <div class="scrubber-fill" id="scrubFill"></div>
+      <div class="scrubber-thumb" id="scrubThumb"></div>
     </div>
 
     <!-- Session title (visible when on air) -->
@@ -730,8 +849,8 @@ html, body {
       <button class="tab-btn" data-tab="memory">Memory</button>
     </div>
 
-    <!-- Content area -->
-    <div class="content-area">
+    <!-- Scrollable body (transcript + queue below) -->
+    <div class="card-body" id="cardBody">
 
       <!-- Transcript panel -->
       <div class="transcript-wrap" id="panelTranscript">
@@ -754,17 +873,18 @@ html, body {
         <div class="transcript-fade"></div>
       </div>
 
-      <!-- Queue panel (hidden by default) -->
-      <div class="queue-list" id="panelQueue" style="display:none"></div>
+      <!-- Queue section (below transcript) -->
+      <div class="queue-section" id="queueSection">
+        <div class="queue-section-title">Up Next</div>
+        <div id="queueListInner"></div>
+      </div>
 
-      <!-- Memory panel (hidden by default) -->
-      <div class="memory-list" id="panelMemory" style="display:none"></div>
-    </div>
+    </div><!-- .card-body -->
 
     <!-- Download status -->
     <div class="download-status" id="downloadStatus"></div>
 
-    <!-- Chat input (always visible, inside card) -->
+    <!-- Chat input (sticky bottom) -->
     <div class="chat-input-bar">
       <textarea id="chat-input" rows="1" placeholder="Say something to Claudio…"></textarea>
       <button id="chat-send" title="Send" aria-label="Send">
@@ -867,6 +987,25 @@ html, body {
   <div class="tweak-row">
     <label>Violet hue <span id="lblVioletHue">330°</span></label>
     <input type="range" id="inVioletHue" min="240" max="360" value="330">
+  </div>
+  <div class="tweak-row">
+    <label>Frequency Theme</label>
+    <div class="segmented" id="freqThemeControl" style="grid-template-columns: repeat(5, 1fr);">
+      <button type="button" data-theme="default" class="active">Cosmic</button>
+      <button type="button" data-theme="sunset">Sunset</button>
+      <button type="button" data-theme="aurora">Aurora</button>
+      <button type="button" data-theme="fire">Fire</button>
+      <button type="button" data-theme="ocean">Ocean</button>
+      <button type="button" data-theme="neon">Neon</button>
+      <button type="button" data-theme="forest">Forest</button>
+      <button type="button" data-theme="amber">Amber</button>
+      <button type="button" data-theme="royal">Royal</button>
+      <button type="button" data-theme="coral">Coral</button>
+    </div>
+  </div>
+  <div class="tweak-row">
+    <label>Auto color <span id="lblAutoColor">OFF</span></label>
+    <button type="button" id="btnAutoColor" aria-pressed="false">OFF</button>
   </div>
 </div>
 
@@ -985,23 +1124,18 @@ function setDjLanguage(value) {
 
 syncDjLanguageControl();
 
-/* ── Clock ────────────────────────────────────────────────── */
+/* ── Clock (24h, Europe/London) ─────────────────────── */
 function updateClock() {
   const now = new Date();
-  const h = now.getHours();
-  const m = String(now.getMinutes()).padStart(2,'0');
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  const h12 = h % 12 || 12;
-  const tz = now.getTimezoneOffset() <= -60 ? 'BST' : 'GMT';
-  const timeStr = `${h12}:${m} ${ampm} ${tz}`;
+  const timeStr = now.toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Europe/London'
+  });
+  const dateStr = now.toLocaleDateString('en-GB', {
+    weekday: 'long', month: 'long', day: 'numeric', timeZone: 'Europe/London'
+  });
   if (headerTime) headerTime.textContent = timeStr;
-  // Hero big clock (no timezone, just time)
-  if (heroTime) heroTime.textContent = `${h12}:${m}`;
-  if (heroDate) {
-    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-    heroDate.textContent = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
-  }
+  if (heroTime) heroTime.textContent = timeStr;
+  if (heroDate) heroDate.textContent = dateStr;
 }
 updateClock();
 setInterval(updateClock, 10000);
@@ -1081,27 +1215,14 @@ document.addEventListener('fullscreenchange', syncFullscreenButton);
 document.addEventListener('webkitfullscreenchange', syncFullscreenButton);
 syncFullscreenButton();
 
-/* ── Scrubber bars ─────────────────────────────────────── */
-const BAR_COUNT = 60;
-const waveHeights = Array.from({length: BAR_COUNT}, (_,i) => {
-  const x = i / BAR_COUNT;
-  return 4 + 18 * Math.abs(Math.sin(i * 0.41) * Math.cos(i * 0.17));
-});
-(function buildScrubber() {
-  waveHeights.forEach(h => {
-    const b = document.createElement('div');
-    b.className = 'player-bar';
-    b.style.height = h + 'px';
-    scrubber.appendChild(b);
-  });
-})();
-const scrubberBars = [...scrubber.querySelectorAll('.player-bar')];
+/* ── Scrubber (green progress bar, v4 style) ── */
+const scrubFill  = document.getElementById('scrubFill');
+const scrubThumb = document.getElementById('scrubThumb');
 
 function updateScrubber(pct) {
-  const played = Math.floor(pct * BAR_COUNT);
-  scrubberBars.forEach((b, i) => {
-    b.classList.toggle('played', i < played);
-  });
+  const val = Math.max(0, Math.min(100, pct * 100));
+  scrubFill.style.width = val + '%';
+  scrubThumb.style.left  = val + '%';
 }
 
 /* ── Format time ─────────────────────────────────────────── */
@@ -1111,25 +1232,60 @@ function fmt(s) {
   return `${m}:${String(sec).padStart(2,'0')}`;
 }
 
-/* ── Tab switching ──────────────────────────────────────── */
+/* ── Tab switching (updated for new structure) ───────────── */
 let currentTab = 'transcript';
 function switchTab(tab) {
   currentTab = tab;
   tabBar.querySelectorAll('.tab-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.tab === tab);
   });
+  // panelTranscript: visible when tab is transcript
   panelTranscript.style.display = tab === 'transcript' ? '' : 'none';
-  panelQueue.style.display = tab === 'queue' ? '' : 'none';
+  // queueSection: visible when tab is transcript or queue
+  const queueSection = document.getElementById('queueSection');
+  if (queueSection) {
+    queueSection.style.display = (tab === 'transcript' || tab === 'queue') ? '' : 'none';
+  }
+  // panelQueue: visible when tab is queue (legacy full queue panel)
+  const panelQueue = document.getElementById('panelQueue');
+  if (panelQueue) panelQueue.style.display = tab === 'queue' ? '' : 'none';
+  // panelMemory
   panelMemory.style.display = tab === 'memory' ? '' : 'none';
+  if (tab === 'queue') renderQueueUI();
+  if (tab === 'memory') renderMemoryUI();
 }
 tabBar.querySelectorAll('.tab-btn').forEach(b => {
   b.addEventListener('click', () => switchTab(b.dataset.tab));
 });
 
-/* ── Queue rendering ────────────────────────────────────── */
+/* ── Queue rendering (updated for new structure) ────────────── */
 function renderQueueUI() {
-  if (currentTab !== 'queue') return;
+  const inner = document.getElementById('queueListInner');
+  if (inner) {
+    inner.innerHTML = '';
+    if (!queue.length) {
+      inner.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:12px;padding:8px 0;">No tracks queued yet.</div>';
+      return;
+    }
+    queue.forEach((track, i) => {
+      const div = document.createElement('div');
+      div.className = 'queue-item' + (i === queueIdx ? ' active' : '');
+      div.innerHTML = `
+        <span class="qi-index">${String(i+1).padStart(2,'0')}</span>
+        <span class="qi-title">${escapeHtml(track.title || track.query || '')}</span>
+        <span class="qi-artist">${escapeHtml(track.artist || '')}</span>
+      `;
+      div.addEventListener('click', () => {
+        if (i <= queueIdx) return;
+        queueIdx = i - 1;
+        playNext();
+      });
+      inner.appendChild(div);
+    });
+  }
+  // Also update the legacy panelQueue for tab switching
   const panel = panelQueue;
+  if (!panel) return;
   panel.innerHTML = '';
   if (!queue.length) {
     panel.innerHTML = '<div style="color:rgba(255,255,255,0.3);font-size:13px;padding:20px 0;">No tracks queued yet.</div>';
@@ -1144,7 +1300,7 @@ function renderQueueUI() {
       <span class="qi-artist">${escapeHtml(track.artist || '')}</span>
     `;
     div.addEventListener('click', () => {
-      if (i <= queueIdx) return; // can't go back
+      if (i <= queueIdx) return;
       queueIdx = i - 1;
       playNext();
     });
@@ -1193,67 +1349,172 @@ function setPlaying(v) {
   setRadioStatus(v ? 'Playing' : 'Paused');
 }
 
-/* ── Web Audio API real-time visualizer ────────────────────── */
-let audioCtx = null;
-let analyser = null;
-let mediaSource = null;
-let rafId = null;
-const barElements = audioBars ? audioBars.querySelectorAll('i') : [];
-const VIZ_BAR_COUNT = barElements.length;
+/* ── Frequency Visualizer (demo v4 style) ─────────────── */
+const FREQ_BAR_COUNT = 48;
+let freqBars = [];
+let freqVizRunning = false;
+let freqVizRaf = null;
+let freqVizAutoTheme = false;
+let freqVizHue = 0;
+const FREQ_THEMES = {
+  default:{b:'#7c5cfc',m:'#a78bfa',t:'#3ebdf9'},
+  sunset:  {b:'#f97316',m:'#fbbf24',t:'#eab308'},
+  aurora:  {b:'#22c55e',m:'#4ade80',t:'#06b6d4'},
+  fire:    {b:'#ef4444',m:'#fb923c',t:'#f97316'},
+  ocean:   {b:'#06b6d4',m:'#60a5fa',t:'#3b82f6'},
+  neon:    {b:'#a855f7',m:'#d946ef',t:'#ec4899'},
+  forest:  {b:'#10b981',m:'#6ee7b7',t:'#34d399'},
+  amber:   {b:'#f59e0b',m:'#fbbf24',t:'#ef4444'},
+  royal:   {b:'#6366f1',m:'#818cf8',t:'#a855f7'},
+  coral:   {b:'#ec4899',m:'#fb7185',t:'#f97316'},
+};
+let freqCurrentTheme = 'default';
 
-function initAudioAnalyser() {
-  if (audioCtx) return;
-  try {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 64;           // 32 frequency bins
-    analyser.smoothingTimeConstant = 0.75;
-    mediaSource = audioCtx.createMediaElementSource(musicAudio);
-    mediaSource.connect(analyser);
-    analyser.connect(audioCtx.destination);
-  } catch (err) {
-    console.warn('[visualizer] AudioContext init failed', err);
+function buildFreqBars() {
+  const container = document.getElementById('freqBars');
+  if (!container) return;
+  container.innerHTML = '';
+  freqBars = [];
+  for (let i = 0; i < FREQ_BAR_COUNT; i++) {
+    const bar = document.createElement('i');
+    bar.style.height = '4px';
+    container.appendChild(bar);
+    const pos = i / FREQ_BAR_COUNT;
+    let base;
+    if (pos < 0.12)      base = 0.6 + Math.random()*0.35;
+    else if (pos < 0.30) base = 0.4 + Math.random()*0.35;
+    else if (pos < 0.55) base = 0.22 + Math.random()*0.30;
+    else if (pos < 0.78) base = 0.12 + Math.random()*0.22;
+    else                   base = 0.05 + Math.random()*0.18;
+    freqBars.push({
+      el: bar, current: base, target: base,
+      speed: 0.12 + Math.random()*0.25,
+      freq1: 1.8 + Math.random()*4.5,
+      freq2: 3.5 + Math.random()*6,
+      phase: Math.random()*Math.PI*2,
+      pos, spike: 0,
+    });
   }
+  applyFreqBarsTheme();
 }
-
-function startVisualizer() {
-  if (!analyser || rafId) return;
-  const buffer = new Uint8Array(analyser.frequencyBinCount);
-  const animate = () => {
-    rafId = requestAnimationFrame(animate);
-    analyser.getByteFrequencyData(buffer);
-    // Map bars to frequency bins (skip the very lowest bins which are usually 0)
-    const binStep = Math.max(1, Math.floor((buffer.length - 2) / VIZ_BAR_COUNT));
-    for (let i = 0; i < VIZ_BAR_COUNT; i++) {
-      const binIdx = 1 + i * binStep;
-      // Average a few bins for smoother bars
-      let sum = 0, count = 0;
-      for (let j = 0; j < binStep; j++) {
-        if (binIdx + j < buffer.length) { sum += buffer[binIdx + j]; count++; }
-      }
-      const avg = count > 0 ? sum / count : 0;
-      // Map 0-255 → 8%-100% height, with a minimum
-      const pct = Math.max(8, (avg / 255) * 100);
-      barElements[i].style.height = pct + '%';
-    }
+function hexToRgb(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+}
+function lerpColor(c1, c2, t) {
+  return {
+    r: Math.round(c1.r + (c2.r - c1.r) * t),
+    g: Math.round(c1.g + (c2.g - c1.g) * t),
+    b: Math.round(c1.b + (c2.b - c1.b) * t),
   };
-  animate();
+}
+function rgbCss(c, a) {
+  if (a !== undefined) return `rgba(${c.r},${c.g},${c.b},${a})`;
+  return `rgb(${c.r},${c.g},${c.b})`;
 }
 
-function stopVisualizer() {
-  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
-  // Reset bars to minimum
-  barElements.forEach(b => { b.style.height = '12%'; });
+function applyFreqBarsTheme() {
+  if (freqVizAutoTheme) return;
+  const t = FREQ_THEMES[freqCurrentTheme] || FREQ_THEMES.default;
+  const c1 = hexToRgb(t.b), c2 = hexToRgb(t.m), c3 = hexToRgb(t.t);
+  freqBars.forEach((b, i) => {
+    const pos = i / FREQ_BAR_COUNT;
+    let c;
+    if (pos < 0.5) c = lerpColor(c1, c2, pos * 2);
+    else c = lerpColor(c2, c3, (pos - 0.5) * 2);
+    b.el.style.background = `linear-gradient(to top, ${rgbCss(c, 0.25)} 0%, ${rgbCss(c, 0.55)} 50%, ${rgbCss(c)} 100%)`;
+    b._baseRgb = c;
+  });
+}
+function setFreqTheme(name) {
+  freqCurrentTheme = name;
+  freqVizAutoTheme = false;
+  applyFreqBarsTheme();
+  // update tweaks UI
+  const el = document.getElementById('freqThemeControl');
+  if (el) el.querySelectorAll('button').forEach(btn => {
+    const active = btn.dataset.theme === name;
+    btn.classList.toggle('active', active);
+    btn.setAttribute('aria-pressed', String(active));
+  });
+  localStorage.setItem('claudio:freq-theme', name);
+}
+function toggleFreqAutoTheme() {
+  freqVizAutoTheme = !freqVizAutoTheme;
+  const btn = document.getElementById('btnAutoColor');
+  if (btn) {
+    btn.textContent = freqVizAutoTheme ? 'ON' : 'OFF';
+    btn.classList.toggle('active', freqVizAutoTheme);
+    btn.setAttribute('aria-pressed', String(freqVizAutoTheme));
+  }
+  document.getElementById('lblAutoColor').textContent = freqVizAutoTheme ? 'ON' : 'OFF';
+  if (!freqVizAutoTheme) applyFreqBarsTheme();
+  localStorage.setItem('claudio:freq-auto', String(freqVizAutoTheme));
 }
 
-// Initialize on first play (needs user gesture for AudioContext)
+function startFreqViz() {
+  if (freqVizRunning) return;
+  freqVizRunning = true;
+  let beatTime = performance.now();
+  const BEAT_INTERVAL = 500;
+  function animate(t) {
+    freqVizRaf = requestAnimationFrame(animate);
+    if (freqVizAutoTheme) {
+      freqVizHue = (freqVizHue + 0.15) % 360;
+      freqBars.forEach((b, i) => {
+        const pos = i / FREQ_BAR_COUNT;
+        const hBot = (freqVizHue + pos * 120) % 360;
+        const hMid = (hBot + 35) % 360;
+        const hTop = (hBot + 70) % 360;
+        b.el.style.background = `linear-gradient(to top, hsl(${hBot},80%,60%), hsl(${hMid},75%,65%), hsl(${hTop},85%,60%))`;
+      });
+    }
+    if (t - beatTime > BEAT_INTERVAL) beatTime = t;
+    const beatPhase = ((t - beatTime) % BEAT_INTERVAL) / BEAT_INTERVAL;
+    const beatPulse = Math.max(0, 1 - beatPhase * 3);
+    freqBars.forEach(b => {
+      const osc1 = Math.sin(t * 0.001 * b.freq1 + b.phase) * 0.30;
+      const osc2 = Math.sin(t * 0.003 * b.freq2 + b.phase * 1.7) * 0.15;
+      const idx = freqBars.indexOf(b);
+      const noise = Math.sin(t * 0.011 + idx * 6.7) * 0.08 + Math.sin(t * 0.019 + idx * 3.3) * 0.05;
+      const beatInfluence = beatPulse * (b.pos < 0.25 ? 0.5 : b.pos < 0.5 ? 0.25 : 0.08);
+      if (b.spike > 0) { b.spike -= 0.08; }
+      else if (Math.random() < 0.03) { b.spike = 0.6 + Math.random() * 0.4; }
+      b.target = Math.max(0.02, Math.min(1,
+        b.current * 0.7 + (b.current + osc1 + osc2 + noise + beatInfluence + b.spike * 0.5) * 0.3
+      ));
+      b.current += (b.target - b.current) * b.speed;
+      let h = b.current * (intensity || 65) / 100 * 55;
+      h = Math.max(3, Math.min(h, 56));
+      b.el.style.height = h + 'px';
+      if (h > 30) b.el.classList.add('tall');
+      else b.el.classList.remove('tall');
+    });
+  }
+  animate(performance.now());
+}
+function stopFreqViz() {
+  freqVizRunning = false;
+  if (freqVizRaf) { cancelAnimationFrame(freqVizRaf); freqVizRaf = null; }
+  freqBars.forEach(b => { b.el.style.height = '3px'; b.el.classList.remove('tall'); });
+}
+
+// Init on load
+buildFreqBars();
+let intensity = 65; // matched with tweaks panel
+
+// ── Play / pause handlers (updated to use freq viz) ─────
 musicAudio.addEventListener('play', () => {
-  initAudioAnalyser();
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-  startVisualizer();
+  setPlaying(true);
+  startFreqViz();
 });
-musicAudio.addEventListener('pause', stopVisualizer);
-musicAudio.addEventListener('ended', stopVisualizer);
+musicAudio.addEventListener('pause', () => {
+  setPlaying(false);
+  stopFreqViz();
+});
+musicAudio.addEventListener('ended', () => {
+  stopFreqViz();
+});
 
 musicAudio.addEventListener('play',  () => setPlaying(true));
 musicAudio.addEventListener('pause', () => setPlaying(false));
@@ -1976,6 +2237,23 @@ skinControl.addEventListener('click', e => {
 
 applySkin(currentSkin);
 
+// ── Restore freq theme & auto color ──────────────────
+(function restoreFreqSettings() {
+  const savedTheme = localStorage.getItem('claudio:freq-theme') || 'default';
+  setFreqTheme(savedTheme);
+  if (savedTheme !== 'default') {
+    const btn = document.querySelector(`#freqThemeControl button[data-theme="${savedTheme}"]`);
+    if (btn) { btn.classList.add('active'); btn.setAttribute('aria-pressed', 'true'); }
+  }
+  const savedAuto = localStorage.getItem('claudio:freq-auto') === 'true';
+  if (savedAuto) {
+    freqVizAutoTheme = true;
+    const ab = document.getElementById('btnAutoColor');
+    if (ab) { ab.textContent = 'ON'; ab.classList.add('active'); ab.setAttribute('aria-pressed', 'true'); }
+    document.getElementById('lblAutoColor').textContent = 'ON';
+  }
+})();
+
 /* ── Tweaks ─────────────────────────────────────────────── */
 document.getElementById('tweaksToggle').addEventListener('click', () => {
   document.getElementById('tweaks').classList.toggle('visible');
@@ -1993,6 +2271,17 @@ djLanguageControl.addEventListener('click', e => {
   const button = e.target.closest('button[data-lang]');
   if (!button) return;
   setDjLanguage(button.dataset.lang);
+});
+
+document.getElementById('freqThemeControl').addEventListener('click', e => {
+  const btn = e.target.closest('button[data-theme]');
+  if (!btn) return;
+  setFreqTheme(btn.dataset.theme);
+  localStorage.setItem('claudio:freq-auto', 'false');
+});
+document.getElementById('btnAutoColor').addEventListener('click', () => {
+  toggleFreqAutoTheme();
+  localStorage.setItem('claudio:freq-auto', String(freqVizAutoTheme));
 });
 
 document.getElementById('swatches').addEventListener('click', e => {

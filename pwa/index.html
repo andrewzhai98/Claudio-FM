@@ -1118,7 +1118,7 @@ let ducking = false;
 let volumeFadeTimer = null;
 const BREATHING_GAP_MS = 500;
 const DUCKED_VOLUME_RATIO = 0.16;
-const SEGUE_LEAD_S = 15;
+const SEGUE_LEAD_S = 30;
 const REFILL_LEAD_S = 120;
 const REFILL_LOW_WATER_TRACKS = 2;
 const MAX_BUFFER_TRACKS = 6;
@@ -2093,7 +2093,7 @@ function playNext() {
 
 function enqueueAndPlay(tracks) {
   if (!tracks?.length) return;
-  const wasEmpty = !musicAudio.src || musicAudio.ended;
+  const queueWasEmpty = queue.length === 0;
   const existingKeys = new Set(queue.map(trackIdentity).filter(Boolean));
   const existingUrls = new Set(queue.map(track => track.streamUrl).filter(Boolean));
   const freshTracks = tracks.filter(track => {
@@ -2107,7 +2107,7 @@ function enqueueAndPlay(tracks) {
   if (!freshTracks.length) return;
   queue = [...queue, ...freshTracks];
   renderQueue();
-  if (wasEmpty) {
+  if (queueWasEmpty) {
     segueStarted = false;
     queueIdx = queue.length - freshTracks.length;
     playTrack(queue[queueIdx]);

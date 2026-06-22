@@ -923,7 +923,6 @@ html, body {
               <span class="word future">for.</span>
             </div>
           </div>
-      <div class="up-next-row" id="upNextRow"></div>
           <div style="height:20px"></div>
         </div>
         <div class="transcript-fade"></div>
@@ -1965,32 +1964,7 @@ function maybeRefillAhead() {
 
 function renderQueue() {
   renderQueueUI();
-  // 渲染 transcript 底部的横向 Up Next 行
-  const row = document.getElementById('upNextRow');
-  if (!row) return;
-  row.innerHTML = '';
-  const upcoming = queue.slice(queueIdx + 1);
-  if (!upcoming.length) {
-    row.style.display = 'none';
-    return;
-  }
-  row.style.display = '';
-  row.scrollLeft = 0;
-  upcoming.forEach((track, i) => {
-    const num = queueIdx + 2 + i;
-    const el = document.createElement('div');
-    el.className = 'up-next-item';
-    el.innerHTML = `
-      <div class="up-next-num">${num}</div>
-      <div class="up-next-title">${escapeHtml(track.title || track.query || 'Unknown')}</div>
-      <div class="up-next-artist">${escapeHtml(track.artist || '')}</div>
-    `;
-    el.addEventListener('click', () => {
-      queueIdx = queueIdx + 1 + i - 1; // 目标索引
-      playNext();
-    });
-    row.appendChild(el);
-  });
+  // 不再渲染 transcript 底部的横向 Up Next 行（Queue 标签页中已有完整队列）
 }
 
 function normalizeTrackText(value) {
@@ -2071,6 +2045,8 @@ function playNext() {
       segment.position === 'before_track' &&
       segment.trackIndex === queueIdx
     );
+    // 调试：打印 beforeTrackSegments 查找结果
+    console.log('[playNext] queueIdx=', queueIdx, 'beforeTrackSegments=', beforeTrackSegments, 'scriptSegments=', scriptSegments);
     if (spokenDuringOutro) {
       if (!ttsAudio.paused && !ttsAudio.ended) {
         ttsAudio.addEventListener('ended', () => playTrack(track), { once: true });
@@ -2078,10 +2054,12 @@ function playNext() {
         playTrack(track);
       }
     } else if (beforeTrackSegments.length) {
+      console.log('[playNext] 播放 cold open:', beforeTrackSegments);
       speakSegmentSequence(beforeTrackSegments, () => playTrack(track));
     } else if (track.introTtsUrl) {
       speakSegment(track.introTranscript, track.introTtsUrl, () => playTrack(track));
     } else {
+      console.log('[playNext] 没有找到 cold open，直接播放音乐');
       playTrack(track);
     }
     maybeRefillAhead();
@@ -2185,6 +2163,8 @@ function handleWsMessage(msg) {
     const tracks = msg.tracks || [];
     const incomingSegments = offsetSegmentsForQueue(normalizeIncomingSegments(msg), queue.length);
     scriptSegments = [...scriptSegments, ...incomingSegments];
+    // 调试：打印接收到的 segments
+    console.log('[program-start] 收到 segments:', incomingSegments, 'tracks:', tracks);
     if (tracks.length) enqueueAndPlay(tracks);
     // program-start 时 playNext() 已处理 before_track（cold open），
     // 这里只播 position === 'immediate' 的段落

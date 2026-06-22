@@ -245,13 +245,21 @@ async function synthesizeSegments(segments) {
       const f = await synthesize(segment.text);
       segment.ttsUrl = '/api/tts/' + path.basename(f);
       segment.status = 'ready';
-      console.log(`[TTS] ${segment.type} 完成 → ${path.basename(f)}`);
+      console.log(`[TTS] ${segment.type} 完成 → ${path.basename(f)} | ttsUrl: ${segment.ttsUrl}`);
     } catch (err) {
       segment.status = 'tts_failed';
       segment.error = err.message;
       console.error(`[TTS] ${segment.type} 合成失败:`, err.message);
     }
   }
+
+  // 打印所有 segments 的 ttsUrl 状态
+  const ttsSegments = segments.filter(s => s.text && s.type !== 'silence');
+  console.log(`[TTS] 合成完成: ${ttsSegments.length} 个段落，${ttsSegments.filter(s => s.ttsUrl).length} 个有 TTS URL`);
+  for (const segment of ttsSegments) {
+    console.log(`  [TTS] ${segment.type}: ttsUrl=${segment.ttsUrl || 'null'} | status=${segment.status}`);
+  }
+
   return segments;
 }
 
@@ -431,6 +439,29 @@ async function resolveRequestedTracks(requestedTracks, options = {}) {
     }
   }
   registerStreamProxy(tracks);
+
+  // 如果所有歌曲都被跳过，则忽略重复过滤，至少返回一首歌
+  if (tracks.length === 0 && failedTracks.length > 0 && !options.skipAvoid) {
+    console.log('[音乐] 所有歌曲都被重复过滤跳过，忽略重复过滤，强制添加第一首歌...');
+    // 重新搜索第一首歌，忽略重复过滤
+    const query = requestedTracks[0];
+    const track = await getTrack(query);
+    if (track?.streamUrl) {
+      const requested = parseRequestedTrack(query);
+      if (trackMatchesRequest(requested, track)) {
+        const payloadTrack = {
+          query,
+          title: track.title || requested.title || query,
+          artist: track.artist || requested.artist || '',
+          streamUrl: track.streamUrl,
+        };
+        tracks.push(payloadTrack);
+        addPlay({ title: payloadTrack.title, artist: payloadTrack.artist, source_url: payloadTrack.streamUrl });
+        console.log(`[音乐] ✓ 强制添加: ${payloadTrack.title}${payloadTrack.artist ? ' — ' + payloadTrack.artist : ''}`);
+      }
+    }
+  }
+
   return { tracks, failedTracks };
 }
 

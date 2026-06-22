@@ -2109,8 +2109,8 @@ function enqueueAndPlay(tracks) {
   renderQueue();
   if (queueWasEmpty) {
     segueStarted = false;
-    queueIdx = queue.length - freshTracks.length;
-    playTrack(queue[queueIdx]);
+    queueIdx = -1;          // playNext() 会 ++ 到 0
+    playNext();               // playNext 会先播 beforeTrackSegments（cold open），再播音乐
   }
   maybeRefillAhead();
 }
@@ -2186,9 +2186,10 @@ function handleWsMessage(msg) {
     const incomingSegments = offsetSegmentsForQueue(normalizeIncomingSegments(msg), queue.length);
     scriptSegments = [...scriptSegments, ...incomingSegments];
     if (tracks.length) enqueueAndPlay(tracks);
-    const immediateSegments = findSegments(segment =>
-      segment.position === 'immediate' ||
-      (segment.position === 'before_track' && (segment.trackIndex ?? 0) === queueIdx)
+    // program-start 时 playNext() 已处理 before_track（cold open），
+    // 这里只播 position === 'immediate' 的段落
+    const immediateSegments = findSegments(
+      segment => segment.position === 'immediate'
     );
     if (immediateSegments.length) speakSegmentSequence(immediateSegments);
     setRadioStatusUI('On Air');

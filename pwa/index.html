@@ -1097,6 +1097,8 @@ function buildStartMessage() {
   return `It's ${hour}:00 on a ${day}. You're on air — open the station. Pick whatever fits the moment.`;
 }
 let startingRadio = false;
+let radioStartResolve = null;
+let radioStartReject = null;
 
 /* ── UI helpers (new) ─────────────────────────────────────── */
 const audioBars = document.getElementById('audioBars');
@@ -1594,7 +1596,22 @@ musicAudio.addEventListener('timeupdate', () => {
   }
 });
 
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  // 用静音 play() 解锁浏览器自动播放策略
+  musicAudio.volume = 0;
+  musicAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+  musicAudio.play().then(() => {
+    musicAudio.pause();
+    musicAudio.volume = baseMusicVolume;
+    musicAudio.removeAttribute('src');
+  }).catch(() => {});
+}
+
 playBtn.addEventListener('click', async () => {
+  unlockAudio();  // 用户手势解锁音频
   if (musicAudio.src && musicAudio.paused) {
     musicAudio.play().catch(console.error);
     return;
@@ -1974,9 +1991,12 @@ function playTrack(track) {
   musicAudio.src = track.streamUrl;
   musicAudio.volume = (!ttsAudio.paused && !ttsAudio.ended) ? duckedMusicVolume() : baseMusicVolume;
   musicAudio.play().catch(err => {
-    console.error('[music] play() 失败:', err);
-    metaSub.textContent = '播放失败，请点击播放按钮';
-    setRadioStatus('Error');
+    console.error('[music] play() 失败 (可能被浏览器自动播放策略拦截):', err);
+    metaSub.textContent = '点击 ▶ 开始播放';
+    setRadioStatus('Paused');
+    // 让播放按钮闪烁提示用户点击
+    playBtn.style.animation = 'pulse 0.8s ease 3';
+    setTimeout(() => { playBtn.style.animation = ''; }, 3000);
   });
   renderQueueUI();
 }
@@ -2093,6 +2113,8 @@ function connectWS() {
 
 function handleWsMessage(msg) {
   if (msg.type === 'program-start') {
+    // 通知 startRadio() 可以结束等待
+    if (radioStartResolve) { radioStartResolve(); radioStartResolve = null; radioStartReject = null; }
     currentProgramId = msg.programId || currentProgramId;
     if (msg.sessionTitle) sessionTitleEl.textContent = msg.sessionTitle;
     sessionTitleBar.classList.add('visible');
@@ -2135,6 +2157,8 @@ function handleWsMessage(msg) {
       lastRefillAt = Date.now();
     }
     if (msg.jobType === 'program_start') {
+      // 通知 startRadio() 启动失败
+      if (radioStartReject) { radioStartReject(new Error('program_start failed')); radioStartResolve = null; radioStartReject = null; }
       setRadioStatus('Paused');
       metaSub.textContent = 'Could not start Claudio FM';
     }
@@ -2236,14 +2260,34 @@ async function startRadio() {
   setRadioStatus('On Air');
   metaSub.textContent = 'Starting Claudio FM…';
   metaSubBar.textContent = 'Starting Claudio FM…';
+
+  // 用 Promise 等待服务器广播 program-start（或失败）
+  const START_TIMEOUT_MS = 90000;
+  let startTimeout = null;
+  const radioStartPromise = new Promise((resolve, reject) => {
+    radioStartResolve = resolve;
+    radioStartReject = reject;
+    startTimeout = setTimeout(() => {
+      if (radioStartReject) radioStartReject(new Error('timeout'));
+    }, START_TIMEOUT_MS);
+  });
+
   try {
     await requestChat(buildStartMessage(), { showUserTurn: false });
+    await radioStartPromise;          // 等 program-start 到达
   } catch (err) {
-    console.error('[start-radio]', err);
+    if (err.message === 'timeout') {
+      console.warn('[start-radio] timed out waiting for program-start');
+    } else {
+      console.error('[start-radio]', err);
+    }
     setRadioStatus('Paused');
     metaSub.textContent = 'Could not start Claudio FM';
     metaSubBar.textContent = 'Could not start Claudio FM';
   } finally {
+    clearTimeout(startTimeout);
+    radioStartResolve = null;
+    radioStartReject = null;
     playBtn.disabled = false;
     startingRadio = false;
     if (musicAudio.src) setRadioStatusUI(musicAudio.paused ? 'Paused' : 'Playing');

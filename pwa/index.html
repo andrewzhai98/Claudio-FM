@@ -360,17 +360,6 @@ html, body {
 .card-body::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1);border-radius:2px; }
 
 /* ── Queue section (below transcript) ─────────────────── */
-.queue-section {
-  padding: 4px 24px 10px;
-  flex-shrink: 0;
-}
-.queue-section-title {
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: #444;
-  margin-bottom: 6px;
-}
 .tab-bar {
   flex: 0 0 auto;
   display: flex; gap: 6px;
@@ -750,6 +739,55 @@ html, body {
   .chat-toggle-label { display: none; }
   .chat-bar { width: calc(100vw - 32px); }
 }
+
+/* Up Next horizontal row */
+.up-next-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  flex-shrink: 0;
+}
+.up-next-row::-webkit-scrollbar { height: 0; }
+.up-next-item {
+  flex: 0 0 auto;
+  width: 140px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.up-next-item:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.15);
+}
+.up-next-item.playing {
+  border-color: rgba(34,197,94,0.5);
+  background: rgba(34,197,94,0.08);
+}
+.up-next-item .up-next-num {
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 3px;
+}
+.up-next-item .up-next-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.up-next-item .up-next-artist {
+  font-size: 10px;
+  color: rgba(255,255,255,0.4);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 </style>
 </head>
 <body>
@@ -885,15 +923,10 @@ html, body {
               <span class="word future">for.</span>
             </div>
           </div>
+      <div class="up-next-row" id="upNextRow"></div>
           <div style="height:20px"></div>
         </div>
         <div class="transcript-fade"></div>
-      </div>
-
-      <!-- Queue section (below transcript) -->
-      <div class="queue-section" id="queueSection">
-        <div class="queue-section-title">Up Next</div>
-        <div id="queueListInner"></div>
       </div>
 
       <!-- Queue panel (full panel for tab switching) -->
@@ -1932,6 +1965,32 @@ function maybeRefillAhead() {
 
 function renderQueue() {
   renderQueueUI();
+  // 渲染 transcript 底部的横向 Up Next 行
+  const row = document.getElementById('upNextRow');
+  if (!row) return;
+  row.innerHTML = '';
+  const upcoming = queue.slice(queueIdx + 1);
+  if (!upcoming.length) {
+    row.style.display = 'none';
+    return;
+  }
+  row.style.display = '';
+  row.scrollLeft = 0;
+  upcoming.forEach((track, i) => {
+    const num = queueIdx + 2 + i;
+    const el = document.createElement('div');
+    el.className = 'up-next-item';
+    el.innerHTML = `
+      <div class="up-next-num">${num}</div>
+      <div class="up-next-title">${escapeHtml(track.title || track.query || 'Unknown')}</div>
+      <div class="up-next-artist">${escapeHtml(track.artist || '')}</div>
+    `;
+    el.addEventListener('click', () => {
+      queueIdx = queueIdx + 1 + i - 1; // 目标索引
+      playNext();
+    });
+    row.appendChild(el);
+  });
 }
 
 function normalizeTrackText(value) {
@@ -1998,7 +2057,7 @@ function playTrack(track) {
     playBtn.style.animation = 'pulse 0.8s ease 3';
     setTimeout(() => { playBtn.style.animation = ''; }, 3000);
   });
-  renderQueueUI();
+  renderQueue();
 }
 
 function playNext() {

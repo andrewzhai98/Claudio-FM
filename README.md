@@ -1,3 +1,27 @@
+# Claudio FM Optimized Build
+
+本优化版主要修复：首次点击开始无反应、开场 DJ 文案不显示、音乐请求时 DJ 不回复、默认 TTS 配置仍指向火山导致权限失败等问题。默认推荐使用 Edge TTS。
+
+推荐 `.env`：
+
+```env
+LLM_PROVIDER=groq
+GROQ_API_KEY=your_groq_key
+GROQ_MODEL=llama-3.1-8b-instant
+TTS_PROVIDER=edge
+EDGE_DJ_VOICE=en-GB-RyanNeural
+EDGE_CALLER_VOICE=zh-CN-YunxiNeural
+MUSIC_PROVIDER=yt-dlp
+```
+
+运行前如需 Edge TTS：
+
+```bash
+pip install edge-tts
+```
+
+---
+
 # Claudio FM
 
 **Claudio FM is a private AI radio station.**

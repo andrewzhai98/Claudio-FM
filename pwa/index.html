@@ -1632,13 +1632,13 @@ let audioUnlocked = false;
 function unlockAudio() {
   if (audioUnlocked) return;
   audioUnlocked = true;
-  // 用静音 play() 解锁浏览器自动播放策略
-  musicAudio.volume = 0;
-  musicAudio.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
-  musicAudio.play().then(() => {
-    musicAudio.pause();
-    musicAudio.volume = baseMusicVolume;
-    musicAudio.removeAttribute('src');
+  // Use an independent silent audio element. Do not touch musicAudio.src,
+  // otherwise the first click can be swallowed by the unlock placeholder.
+  const silent = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+  silent.volume = 0;
+  silent.play().then(() => {
+    silent.pause();
+    silent.removeAttribute('src');
   }).catch(() => {});
 }
 
@@ -1788,8 +1788,31 @@ function programTimeLabel() {
   return fmt(Math.max(0, (Date.now() - programClockStartedAt) / 1000));
 }
 
+const recentClaudioChatTexts = new Map();
+function addClaudioChatTurnOnce(text, timeLabel = 'now') {
+  const normalized = String(text || '').trim();
+  if (!normalized) return 0;
+  const lastAt = recentClaudioChatTexts.get(normalized) || 0;
+  if (Date.now() - lastAt < 8000) return 0;
+  recentClaudioChatTexts.set(normalized, Date.now());
+  return addTurn('Claudio', normalized, timeLabel);
+}
+
 function addSegmentTurn(segment) {
-  return addTurn('Claudio', segment.text || '', programTimeLabel());
+  return displaySegmentOnce(segment);
+}
+
+const displayedSegmentIds = new Set();
+function displaySegmentOnce(segment, timeLabel = programTimeLabel()) {
+  if (!segment || !segment.text) return 0;
+  const key = segmentKey(segment) || segment.id || segment.text;
+  if (key && displayedSegmentIds.has(key)) return 0;
+  if (key) displayedSegmentIds.add(key);
+  return addTurn('Claudio', segment.text || '', timeLabel);
+}
+
+function displaySegmentSequenceOnce(segments, timeLabel = 'now') {
+  (segments || []).forEach(segment => displaySegmentOnce(segment, timeLabel));
 }
 
 function advanceKaraoke(cur, dur) {
@@ -2163,6 +2186,12 @@ function handleWsMessage(msg) {
     const tracks = msg.tracks || [];
     const incomingSegments = offsetSegmentsForQueue(normalizeIncomingSegments(msg), queue.length);
     scriptSegments = [...scriptSegments, ...incomingSegments];
+    const openingSegments = incomingSegments.filter(segment =>
+      segment.text &&
+      segment.position === 'before_track' &&
+      (segment.trackIndex ?? 0) === queue.length
+    );
+    if (openingSegments.length) displaySegmentSequenceOnce(openingSegments, 'now');
     // 调试：打印接收到的 segments
     console.log('[program-start] 收到 segments:', incomingSegments, 'tracks:', tracks);
     if (tracks.length) enqueueAndPlay(tracks);
@@ -2253,6 +2282,12 @@ function handleWsMessage(msg) {
     } else {
       if (!musicLive) resetProgramClock();
       scriptSegments = [...scriptSegments, ...incomingSegments];
+      const visibleSegments = incomingSegments.filter(segment =>
+        segment.text &&
+        (segment.position === 'immediate' ||
+          (segment.position === 'before_track' && (segment.trackIndex ?? 0) === queue.length))
+      );
+      if (visibleSegments.length) displaySegmentSequenceOnce(visibleSegments, 'now');
       if (tracks.length) enqueueAndPlay(tracks);
       const immediateSegments = findSegments(segment =>
         segment.position === 'immediate' ||
@@ -2286,8 +2321,9 @@ async function requestChat(message, { showUserTurn = true } = {}) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message, djLanguage }),
     });
-    // The server will send the AI response via WebSocket
-    // No need to handle HTTP response here
+    const data = await response.json().catch(() => ({}));
+    if (data.text) addClaudioChatTurnOnce(data.text, 'now');
+    // Full AI/music result still arrives via WebSocket.
   } catch (err) {
     console.error('[chat]', err);
   }
@@ -2300,6 +2336,10 @@ async function startRadio() {
   setRadioStatus('On Air');
   metaSub.textContent = 'Starting Claudio FM…';
   metaSubBar.textContent = 'Starting Claudio FM…';
+  addTurn('Claudio', djLanguage === 'zh'
+    ? '正在为你生成今晚的第一组歌和开场白…'
+    : 'Building your first set and opening line…',
+    'now');
 
   // 用 Promise 等待服务器广播 program-start（或失败）
   const START_TIMEOUT_MS = 90000;

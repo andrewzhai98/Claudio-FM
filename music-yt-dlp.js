@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const PYTHON = '/Users/andrew/.workbuddy/binaries/python/versions/3.13.12/bin/python3';
-const YTDLP = '/Users/andrew/.workbuddy/binaries/python/versions/3.13.12/bin/yt-dlp';
+const YTDLP = process.env.YTDLP_PATH || 'yt-dlp';
 const TIMEOUT_MS = 60000;
 const CACHE_DIR = path.join(__dirname, 'cache', 'music');
 const MAX_CACHE_FILES = 10;

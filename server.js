@@ -943,6 +943,20 @@ app.post('/api/chat', async (req, res) => {
   }
 
   if (intent.mode !== 'speech-only') {
+    const ackText = intent.djLanguage === 'zh'
+      ? '收到，我来按这个感觉重新组一段歌。'
+      : 'Got it. I’ll shape the next set around that mood.';
+
+    // Give immediate conversational feedback. The full music batch will arrive later
+    // through program-start WebSocket events.
+    broadcast({
+      type: 'chat-response',
+      text: ackText,
+      transcript: ackText,
+      ttsUrl: null,
+      mode: 'ack',
+    });
+
     enqueueJob({
       type: 'program_start',
       key: `program_start:${Date.now()}`,
@@ -950,7 +964,7 @@ app.post('/api/chat', async (req, res) => {
       source: autoRefill ? 'autoRefill' : 'user',
       djLanguage: intent.djLanguage,
     });
-    return res.json({ queued: true, jobType: 'program_start' });
+    return res.json({ queued: true, jobType: 'program_start', text: ackText });
   }
 
   await handleClaudeRequest(intent.message, res, intent, !!autoRefill);
